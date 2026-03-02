@@ -1,10 +1,11 @@
 function App() {
   return (
-    <div style={{ padding: '40px', textAlign: 'center' }}>
-      <h1>Event Management App</h1>
-      <p>Фронтенд очищено від зайвого сміття 🚀</p>
+    <div className="flex h-screen items-center justify-center bg-red-500 text-white">
+      <h1 className="text-4xl font-black uppercase tracking-widest">
+        Tailwind Працює!
+      </h1>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
