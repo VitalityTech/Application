@@ -1,36 +1,40 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
-import { Event } from './entities/event.entity';
+import { PrismaService } from '../prisma.service';
+import { Event, Prisma } from '@prisma/client';
 
 @Injectable()
 export class EventsService {
-  constructor(
-    @InjectRepository(Event)
-    private eventsRepository: Repository<Event>,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createEventDto: CreateEventDto) {
-    const newEvent = this.eventsRepository.create(createEventDto);
-    return this.eventsRepository.save(newEvent);
+  async create(data: Prisma.EventCreateInput): Promise<Event> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return await (this.prisma as any).event.create({ data });
   }
 
-  findAll() {
-    return this.eventsRepository.find();
+  async findAll(): Promise<Event[]> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return await (this.prisma as any).event.findMany();
   }
 
-  findOne(id: number) {
-    return this.eventsRepository.findOneBy({ id });
+  async findOne(id: string): Promise<Event | null> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return await (this.prisma as any).event.findUnique({
+      where: { id },
+    });
   }
 
-  async update(id: number, updateEventDto: UpdateEventDto) {
-    await this.eventsRepository.update(id, updateEventDto);
-    return this.findOne(id);
+  async update(id: string, data: Prisma.EventUpdateInput): Promise<Event> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return await (this.prisma as any).event.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: number) {
-    return this.eventsRepository.delete(id);
+  async remove(id: string): Promise<Event> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+    return await (this.prisma as any).event.delete({
+      where: { id },
+    });
   }
 }

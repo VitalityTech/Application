@@ -1,1 +1,15 @@
 @import "tailwindcss";
+
+:root {
+  /* Налаштовуємо кольори з твого макету */
+  --color-brand-primary: #6366f1;
+  --color-brand-secondary: #4f46e5;
+  --color-brand-bg: #f8fafc;
+  --color-brand-sidebar: #ffffff;
+  
+  /* Радіус закруглення як на макеті */
+  --radius-2xl: 1rem;
+  
+  background-color: var(--color-brand-bg);
+  font-family: 'Inter', system-ui, sans-serif;
+}
