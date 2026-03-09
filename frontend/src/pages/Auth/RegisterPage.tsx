@@ -83,14 +83,17 @@ export const RegisterPage = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center items-center gap-3">
+        <Link
+          to="/events"
+          className="flex justify-center items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+        >
           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-lg border border-slate-100">
             <BsFillBookmarkStarFill size={24} />
           </div>
           <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
             Evently
           </h2>
-        </div>
+        </Link>
         <p className="mt-4 text-center text-sm text-slate-500 font-medium">
           Create an account to start managing events
         </p>
