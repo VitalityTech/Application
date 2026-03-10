@@ -12,6 +12,11 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EventVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
@@ -19,15 +24,31 @@ model User {
   password  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Події, які створив цей користувач (Organizer)
+  organizedEvents Event[] @relation("Organizer")
+
+  // Події, до яких користувач приєднався (Participants)
+  joinedEvents Event[] @relation("EventParticipants")
 }
 
 model Event {
-  id          String    @id @default(uuid())
+  id          String          @id @default(uuid())
   title       String
+  category    String          @default("Інше")
   description String?
   location    String?
+  capacity    Int?
+  visibility  EventVisibility @default(PUBLIC)
   startDate   DateTime
   endDate     DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Організатор події
+  organizer User?   @relation("Organizer", fields: [userId], references: [id])
+  userId    String?
+
+  // Список учасників (Many-to-Many)
+  participants User[] @relation("EventParticipants")
 }
