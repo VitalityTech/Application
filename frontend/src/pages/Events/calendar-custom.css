@@ -1,0 +1,154 @@
+/* ─── Основний контейнер ───────────────────────────────── */
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: inherit !important;
+  background: transparent !important;
+}
+
+/* ─── Навігація ─────────────────────────────────────────── */
+.react-calendar__navigation {
+  display: flex !important;
+  align-items: center !important;
+  margin-bottom: 24px !important;
+  gap: 2px !important;
+}
+
+.react-calendar__navigation button {
+  font-weight: 800 !important;
+  color: #64748b !important;
+  font-size: 1.1rem !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  transition:
+    background 0.15s,
+    color 0.15s !important;
+  min-width: 36px !important;
+  background: transparent !important;
+}
+
+.react-calendar__navigation button:enabled:hover {
+  background: #f1f5f9 !important;
+  color: #4f46e5 !important;
+}
+
+.react-calendar__navigation__label {
+  font-size: 1.15rem !important;
+  font-weight: 900 !important;
+  color: #0f172a !important;
+  flex-grow: 1 !important;
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+/* ─── Заголовки ПН ВТ СР… ──────────────────────────────── */
+.react-calendar__month-view__weekdays {
+  margin-bottom: 8px !important;
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 4px 0 !important;
+  text-align: center !important;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  color: #94a3b8 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.08em !important;
+}
+
+/* ─── Сітка днів ────────────────────────────────────────── */
+.react-calendar__month-view__days {
+  display: grid !important;
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 2px !important;
+}
+
+/* ─── Клітинки ──────────────────────────────────────────── */
+.react-calendar__tile {
+  height: 52px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 6px 2px 4px !important;
+  border-radius: 12px !important;
+  transition: background 0.15s !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Цифра дня */
+.react-calendar__tile abbr {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  width: 34px !important;
+  height: 34px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  transition:
+    background 0.15s,
+    color 0.15s !important;
+  line-height: 1 !important;
+}
+
+/* ─── Ховер ─────────────────────────────────────────────── */
+.react-calendar__tile:enabled:hover {
+  background: transparent !important;
+}
+
+.react-calendar__tile:enabled:hover abbr {
+  background: #ede9fe !important;
+  color: #4f46e5 !important;
+}
+
+/* ─── Сьогодні ──────────────────────────────────────────── */
+.react-calendar__tile--now {
+  background: transparent !important;
+  border: none !important;
+}
+
+.react-calendar__tile--now abbr {
+  background: #4f46e5 !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4) !important;
+}
+
+/* ─── Вибраний ──────────────────────────────────────────── */
+.react-calendar__tile--active {
+  background: transparent !important;
+}
+
+.react-calendar__tile--active abbr {
+  background: #4f46e5 !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4) !important;
+}
+
+.react-calendar__tile--active:enabled:hover abbr {
+  background: #4338ca !important;
+}
+
+/* ─── Вихідні ───────────────────────────────────────────── */
+.react-calendar__month-view__days__day--weekend abbr {
+  color: #f43f5e !important;
+}
+
+.react-calendar__tile--now abbr,
+.react-calendar__tile--active abbr {
+  color: white !important;
+}
+
+/* Дні іншого місяця */
+.react-calendar__month-view__days__day--neighboringMonth abbr {
+  color: #cbd5e1 !important;
+  font-weight: 400 !important;
+}
