@@ -95,9 +95,14 @@ export const CreateEventPage = () => {
 
       <div className="max-w-2xl mx-auto bg-white p-10 rounded-[40px] shadow-sm border border-slate-100">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-black mb-2">Create New Event</h1>
-          <p className="text-slate-500 font-medium">
-            Fill in the details to create an amazing event
+          <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
+            ✦ New Event
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent mb-3 whitespace-nowrap">
+            Create New Event
+          </h1>
+          <p className="text-slate-400 font-medium text-sm max-w-xs mx-auto leading-relaxed">
+            Fill in the details below to bring your event to life
           </p>
         </div>
 
@@ -207,7 +212,7 @@ export const CreateEventPage = () => {
             <input
               type="text"
               required
-              placeholder="e.g., Convention Center, San Francisco"
+              placeholder="e.g., Convention Center"
               className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
               onChange={(e) =>
                 setFormData({ ...formData, location: e.target.value })
@@ -276,18 +281,18 @@ export const CreateEventPage = () => {
           </div>
 
           {/* Form Actions */}
-          <div className="grid grid-cols-2 gap-4 pt-6">
+          <div className="flex flex-col-reverse sm:grid sm:grid-cols-2 gap-3 pt-6">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="p-4 bg-slate-50 text-slate-900 rounded-2xl font-black hover:bg-slate-100 transition-all active:scale-95"
+              className="w-full py-4 px-6 border-2 border-slate-200 bg-white text-slate-600 rounded-2xl font-bold text-base hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.97]"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="p-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full py-4 px-6 bg-linear-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Creating..." : "Create Event"}
             </button>

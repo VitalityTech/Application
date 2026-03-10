@@ -134,13 +134,16 @@ export const EventsPage = () => {
     <div className="min-h-screen bg-slate-50 font-sans">
       <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
         <div className="mb-8 md:mb-10">
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-            {user.id ? "My Workspace" : "Discover Events"}
+          <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
+            {user.id ? "✦ My Workspace" : "✦ Explore"}
+          </div>
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.12] pb-1 bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent mb-3">
+            {user.id ? "My Space" : "Find an Event"}
           </h1>
-          <p className="text-slate-500 font-medium text-base md:text-lg max-w-2xl">
+          <p className="text-slate-400 font-medium text-sm md:text-base max-w-md leading-relaxed">
             {user.id
-              ? "Create and manage your own events in a personal space"
-              : "Find and join exciting events happening around you"}
+              ? "Browse, join, and manage your events in one place"
+              : "Discover top events and find inspiration nearby"}
           </p>
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
             <div className="relative">
