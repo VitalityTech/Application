@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
+import { GoogleLogin } from "@react-oauth/google";
+import type { CredentialResponse } from "@react-oauth/google";
 import {
   BsFillBookmarkStarFill,
   BsEnvelope,
@@ -18,17 +20,48 @@ export const RegisterPage = () => {
   const location = useLocation();
   const redirectTo =
     (location.state as { from?: string } | null)?.from || "/events";
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
+    | string
+    | undefined;
+  const hasGoogleClientId =
+    Boolean(googleClientId) &&
+    !googleClientId?.includes("your-google-oauth-client-id") &&
+    /\.apps\.googleusercontent\.com$/.test(googleClientId ?? "");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // 1. Валідація
+    if (fullName.trim().length < 2) {
+      toast.error("Ім'я повинно містити мінімум 2 символи");
+      return;
+    }
+
+    if (fullName.trim().length > 50) {
+      toast.error("Ім'я занадто довге (максимум 50 символів)");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error("Введіть коректний email (наприклад: user@example.com)");
+      return;
+    }
+
     if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
+      toast.error("Пароль повинен містити мінімум 6 символів");
+      return;
+    }
+
+    if (/^\d+$/.test(password)) {
+      toast.error("Пароль не може містити лише цифри");
       return;
     }
 
     setIsLoading(true);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
       // 2. РЕАЛЬНИЙ ЗАПИТ ДО БЕКЕНДУ
@@ -42,8 +75,10 @@ export const RegisterPage = () => {
           email,
           password,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (!response.ok) {
@@ -73,11 +108,54 @@ export const RegisterPage = () => {
 
       // -------------------------------
     } catch (err: unknown) {
+      clearTimeout(timeoutId);
       const error = err as Error;
       console.error("Registration error:", error);
-      toast.error(
-        error.message || "Something went wrong. Is the server running?",
-      );
+      if (error.name === "AbortError") {
+        toast.error("Сервер недоступний. Перевірте підключення до мережі.", {
+          duration: 5000,
+        });
+      } else {
+        toast.error(
+          error.message || "Something went wrong. Is the server running?",
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (
+    credentialResponse: CredentialResponse,
+  ) => {
+    if (!credentialResponse.credential) {
+      toast.error("Google sign-up failed");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Google sign-up failed");
+      }
+
+      if (data.access_token) {
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      toast.success("Logged in with Google");
+      navigate(redirectTo);
+    } catch (err: unknown) {
+      const error = err as Error;
+      toast.error(error.message || "Google sign-up failed");
     } finally {
       setIsLoading(false);
     }
@@ -88,17 +166,17 @@ export const RegisterPage = () => {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link
           to="/events"
-          className="flex justify-center items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          className="group flex justify-center items-center gap-3 cursor-pointer transition-all duration-300 hover:-translate-y-0.5"
         >
           <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-slate-900 shadow-lg border border-slate-100">
             <BsFillBookmarkStarFill size={24} />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-4xl font-black tracking-tight bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent leading-[1.08] pb-1 transition-all duration-300 group-hover:from-indigo-900 group-hover:to-violet-700">
             Evently
           </h2>
         </Link>
         <p className="mt-4 text-center text-sm text-slate-500 font-medium">
-          Create an account to start managing events
+          Join Evently and start creating events people truly remember.
         </p>
       </div>
 
@@ -116,7 +194,7 @@ export const RegisterPage = () => {
                 <input
                   type="text"
                   required
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 text-base md:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
                   placeholder="John Doe"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -135,7 +213,7 @@ export const RegisterPage = () => {
                 <input
                   type="email"
                   required
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 text-base md:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
                   placeholder="name@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -154,7 +232,7 @@ export const RegisterPage = () => {
                 <input
                   type="password"
                   required
-                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 text-base md:text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900 transition-all"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -174,6 +252,46 @@ export const RegisterPage = () => {
             >
               {isLoading ? "Creating account..." : "Create Account"}
             </button>
+
+            <>
+              <div className="relative py-1">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-200" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                    or
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                {hasGoogleClientId ? (
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={() => toast.error("Google sign-up failed")}
+                    text="continue_with"
+                    shape="pill"
+                    theme="outline"
+                    size="large"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="w-full max-w-[320px] rounded-full border border-slate-300 bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-500"
+                  >
+                    Continue with Google
+                  </button>
+                )}
+                {!hasGoogleClientId && (
+                  <p className="text-xs text-slate-400 text-center">
+                    Додай VITE_GOOGLE_CLIENT_ID у frontend/.env щоб увімкнути
+                    Google Login
+                  </p>
+                )}
+              </div>
+            </>
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-500 font-medium">

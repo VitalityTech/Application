@@ -80,30 +80,35 @@ export const MyEventsPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans">
+    <div className="min-h-screen bg-slate-50 p-4 md:p-12 font-sans">
       <div className="max-w-6xl mx-auto">
         {/* Кнопка повернення на головну */}
         <button
           onClick={() => navigate("/events")}
-          className="flex items-center gap-2 text-slate-500 mb-6 font-bold hover:text-indigo-600 transition-all group"
+          className="flex items-center gap-2 text-slate-500 mb-5 font-bold hover:text-indigo-600 transition-all group"
         >
           <BsArrowLeft className="group-hover:-translate-x-1 transition-transform" />
           Назад до подій
         </button>
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-          <div>
-            <h1 className="text-4xl font-black text-slate-900 mb-2">
+        <div className="mb-8">
+          {/* Заголовок */}
+          <div className="mb-4">
+            <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-3">
+              ✦ My Events
+            </div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent mb-2">
               Мої Події
             </h1>
-            <p className="text-slate-500 font-bold text-lg">
+            <p className="text-slate-400 font-medium text-sm max-w-sm leading-relaxed">
               Переглядайте та керуйте своїм календарем
             </p>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* Контроли — на мобільному вертикально */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {/* Перемикач виглядів */}
-            <div className="bg-white p-1.5 rounded-2xl border border-slate-200 flex shadow-sm">
+            <div className="bg-white p-1.5 rounded-2xl border border-slate-200 flex shadow-sm w-fit">
               <button
                 onClick={() => setView("month")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm transition-all ${
@@ -128,7 +133,7 @@ export const MyEventsPage = () => {
 
             <Link
               to="/create-event"
-              className="bg-indigo-600 text-white px-6 py-3.5 rounded-2xl font-black flex items-center gap-2 hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all active:scale-95"
+              className="bg-linear-to-r from-indigo-600 to-violet-600 text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.97] whitespace-nowrap w-full sm:w-auto"
             >
               <BsPlusLg /> Створити подію
             </Link>
@@ -136,7 +141,7 @@ export const MyEventsPage = () => {
         </div>
 
         {/* Секція календаря */}
-        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 min-h-150">
+        <div className="bg-white p-4 md:p-8 rounded-4xl md:rounded-[40px] shadow-sm border border-slate-100 min-h-150">
           {view === "month" ? (
             <Calendar
               locale="uk-UA"
