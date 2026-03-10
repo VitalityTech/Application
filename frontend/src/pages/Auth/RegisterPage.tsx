@@ -10,6 +10,10 @@ import {
 } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/baseUrl";
+import {
+  getGoogleClientId,
+  isGoogleClientIdConfigured,
+} from "../../api/googleClient";
 
 export const RegisterPage = () => {
   const [fullName, setFullName] = useState("");
@@ -20,13 +24,8 @@ export const RegisterPage = () => {
   const location = useLocation();
   const redirectTo =
     (location.state as { from?: string } | null)?.from || "/events";
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
-    | string
-    | undefined;
-  const hasGoogleClientId =
-    Boolean(googleClientId) &&
-    !googleClientId?.includes("your-google-oauth-client-id") &&
-    /\.apps\.googleusercontent\.com$/.test(googleClientId ?? "");
+  const googleClientId = getGoogleClientId();
+  const hasGoogleClientId = isGoogleClientIdConfigured(googleClientId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

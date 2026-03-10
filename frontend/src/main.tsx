@@ -3,14 +3,13 @@ import { createRoot } from "react-dom/client";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./index.css";
 import App from "./App.tsx";
+import {
+  getGoogleClientId,
+  isGoogleClientIdConfigured,
+} from "./api/googleClient";
 
-const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
-  | string
-  | undefined;
-const hasValidGoogleClientId =
-  Boolean(googleClientId) &&
-  !googleClientId?.includes("your-google-oauth-client-id") &&
-  /\.apps\.googleusercontent\.com$/.test(googleClientId ?? "");
+const googleClientId = getGoogleClientId();
+const hasValidGoogleClientId = isGoogleClientIdConfigured(googleClientId);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
