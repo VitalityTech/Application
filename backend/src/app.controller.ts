@@ -25,6 +25,9 @@ interface LoginDto {
   email: string;
   password: string;
 }
+interface GoogleAuthDto {
+  credential: string;
+}
 interface CreateEventDto {
   title: string;
   category?: string;
@@ -101,6 +104,81 @@ export class AppController {
     // Виправлено: додано await для bcrypt та перевірку на null
     if (!user || !(await bcrypt.compare(password, user.password || ''))) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const token = this.jwtService.sign({ userId: user.id });
+    const { password: userPassword, ...userWithoutPassword } = user;
+    void userPassword;
+    return { access_token: token, user: userWithoutPassword };
+  }
+
+  @Post('google')
+  async googleAuth(@Body() body: GoogleAuthDto) {
+    const { credential } = body;
+
+    if (!credential) {
+      throw new BadRequestException('Google credential is required');
+    }
+
+    const tokenInfoResponse = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+    );
+
+    if (!tokenInfoResponse.ok) {
+      throw new UnauthorizedException('Invalid Google credential');
+    }
+
+    const tokenInfo = (await tokenInfoResponse.json()) as {
+      aud?: string;
+      email?: string;
+      email_verified?: string | boolean;
+      name?: string;
+    };
+
+    const isEmailVerified =
+      tokenInfo.email_verified === true || tokenInfo.email_verified === 'true';
+
+    if (!tokenInfo.email || !isEmailVerified) {
+      throw new UnauthorizedException('Google email is not verified');
+    }
+
+    const expectedClientId = process.env.GOOGLE_CLIENT_ID;
+    if (expectedClientId && tokenInfo.aud !== expectedClientId) {
+      throw new UnauthorizedException('Google token audience mismatch');
+    }
+
+    let user = await this.prisma.user.findUnique({
+      where: { email: tokenInfo.email },
+    });
+
+    if (!user) {
+      const fallbackName = tokenInfo.email.split('@')[0] || 'Google User';
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            email: tokenInfo.email,
+            fullName: tokenInfo.name?.trim() || fallbackName,
+            password: null,
+          },
+        });
+      } catch (error: unknown) {
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'code' in error &&
+          (error as { code?: string }).code === 'P2002'
+        ) {
+          user = await this.prisma.user.findUnique({
+            where: { email: tokenInfo.email },
+          });
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    if (!user) {
+      throw new BadRequestException('Unable to authenticate with Google');
     }
 
     const token = this.jwtService.sign({ userId: user.id });
