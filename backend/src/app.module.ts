@@ -1,24 +1,20 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { EventsModule } from './events/events.module';
+import { PrismaService } from './prisma.service';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'admin',
-      password: 'mysecretpassword',
-      database: 'event_db',
-      autoLoadEntities: true,
-      synchronize: true, // Автоматично створює таблиці в БД на основі твого коду
-    }),
     EventsModule,
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET ?? 'super-secret-key',
+      signOptions: { expiresIn: '7d' },
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, PrismaService],
 })
 export class AppModule {}

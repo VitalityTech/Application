@@ -1,0 +1,43 @@
+/* Основний контейнер календаря */
+.react-calendar {
+  width: 100% !important;
+  border: none !important;
+  font-family: inherit !important;
+  background: transparent !important;
+}
+
+/* Стилізація плиток (днів) */
+.react-calendar__tile {
+  height: 120px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  padding: 12px !important;
+  border-radius: 16px !important;
+  transition: all 0.2s ease !important;
+  border: 1px solid #f1f5f9 !important; /* slate-100 */
+  background: white !important;
+}
+
+/* Ховер та активний день */
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #f8fafc !important; /* slate-50 */
+}
+
+.react-calendar__tile--now {
+  background: #eff6ff !important; /* blue-50 */
+  border: 2px solid #3b82f6 !important;
+}
+
+.react-calendar__tile--active {
+  background: #4f46e5 !important; /* indigo-600 */
+  color: white !important;
+}
+
+/* Навігація зверху */
+.react-calendar__navigation button {
+  font-weight: 800 !important;
+  color: #1e293b !important;
+  font-size: 1.1rem !important;
+}

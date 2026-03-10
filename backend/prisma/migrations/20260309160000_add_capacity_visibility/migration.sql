@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Event"
+ADD COLUMN "capacity" INTEGER,
+ADD COLUMN "visibility" TEXT NOT NULL DEFAULT 'PUBLIC';
