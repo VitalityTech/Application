@@ -5,6 +5,10 @@ import toast from "react-hot-toast";
 import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import { API_BASE_URL } from "../../api/baseUrl";
+import {
+  getGoogleClientId,
+  isGoogleClientIdConfigured,
+} from "../../api/googleClient";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -14,13 +18,8 @@ export const LoginPage = () => {
   const location = useLocation();
   const redirectTo =
     (location.state as { from?: string } | null)?.from || "/events";
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
-    | string
-    | undefined;
-  const hasGoogleClientId =
-    Boolean(googleClientId) &&
-    !googleClientId?.includes("your-google-oauth-client-id") &&
-    /\.apps\.googleusercontent\.com$/.test(googleClientId ?? "");
+  const googleClientId = getGoogleClientId();
+  const hasGoogleClientId = isGoogleClientIdConfigured(googleClientId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
