@@ -9,6 +9,7 @@ import {
   BsArrowLeft, // Додано для навігації
 } from "react-icons/bs";
 import "./calendar-custom.css";
+import { API_BASE_URL } from "../../api/baseUrl";
 
 interface Event {
   id: string;
@@ -19,6 +20,7 @@ interface Event {
 export const MyEventsPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [view, setView] = useState<"month" | "week">("month");
+  const [activeDate, setActiveDate] = useState<Date>(new Date());
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -27,7 +29,7 @@ export const MyEventsPage = () => {
     const fetchMyEvents = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/auth/users/${user.id}/events`,
+          `${API_BASE_URL}/auth/users/me/events?userId=${user.id}`,
         );
         if (response.ok) {
           const data = await response.json();
@@ -67,6 +69,15 @@ export const MyEventsPage = () => {
     }
     return null;
   };
+
+  const weekDays = Array.from({ length: 7 }, (_, index) => {
+    const day = new Date(activeDate);
+    const currentDay = day.getDay();
+    const diffToMonday = (currentDay + 6) % 7;
+    day.setDate(day.getDate() - diffToMonday + index);
+    day.setHours(0, 0, 0, 0);
+    return day;
+  });
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans">
@@ -126,11 +137,13 @@ export const MyEventsPage = () => {
 
         {/* Секція календаря */}
         <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 min-h-150">
-          {events.length > 0 ? (
+          {view === "month" ? (
             <Calendar
-              locale="uk-UA" // Українська локалізація
+              locale="uk-UA"
               tileContent={tileContent}
+              value={activeDate}
               onClickDay={(date) => {
+                setActiveDate(date);
                 const dayEvent = events.find(
                   (e) =>
                     new Date(e.startDate).toDateString() ===
@@ -141,12 +154,61 @@ export const MyEventsPage = () => {
               className="w-full border-none"
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-32 text-center">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-6">
-                <BsCalendar3 size={32} className="text-slate-300" />
-              </div>
-              <p className="text-slate-400 font-bold text-xl mb-4">
-                Ви ще не берете участі в жодній події.
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+              {weekDays.map((day) => {
+                const dayEvents = events.filter(
+                  (event) =>
+                    new Date(event.startDate).toDateString() ===
+                    day.toDateString(),
+                );
+
+                return (
+                  <div
+                    key={day.toISOString()}
+                    className="border border-slate-200 rounded-2xl p-3 min-h-28"
+                  >
+                    <p className="text-xs text-slate-500 font-bold mb-2">
+                      {day.toLocaleDateString("uk-UA", {
+                        weekday: "short",
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </p>
+
+                    {dayEvents.length > 0 ? (
+                      <div className="space-y-2">
+                        {dayEvents.map((event) => (
+                          <button
+                            key={event.id}
+                            onClick={() => navigate(`/events/${event.id}`)}
+                            className="w-full text-left bg-indigo-50 text-indigo-700 rounded-lg p-2 text-xs font-bold hover:bg-indigo-100 transition-colors"
+                          >
+                            <p className="truncate">{event.title}</p>
+                            <p className="text-[10px] text-indigo-500 mt-0.5">
+                              {new Date(event.startDate).toLocaleTimeString(
+                                [],
+                                { hour: "2-digit", minute: "2-digit" },
+                              )}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 font-medium">
+                        No events
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {events.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <p className="text-slate-400 font-bold text-xl mb-3">
+                You are not part of any events yet. Explore public events and
+                join.
               </p>
               <Link
                 to="/events"

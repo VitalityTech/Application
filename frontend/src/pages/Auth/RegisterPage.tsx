@@ -6,8 +6,8 @@ import {
   BsLock,
   BsPerson,
 } from "react-icons/bs";
-import { GoogleLogin } from "@react-oauth/google";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../api/baseUrl";
 
 export const RegisterPage = () => {
   const [fullName, setFullName] = useState("");
@@ -15,6 +15,9 @@ export const RegisterPage = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo =
+    (location.state as { from?: string } | null)?.from || "/events";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +32,7 @@ export const RegisterPage = () => {
 
     try {
       // 2. РЕАЛЬНИЙ ЗАПИТ ДО БЕКЕНДУ
-      const response = await fetch("http://localhost:3000/auth/register", {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -44,8 +47,11 @@ export const RegisterPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Якщо сервер повернув помилку (наприклад, email вже зайнятий)
-        throw new Error(data.message || "Registration failed");
+        const message =
+          response.status === 409
+            ? "Користувач з таким email вже існує"
+            : data.message || "Registration failed";
+        throw new Error(message);
       }
 
       // --- ДОДАНИЙ БЛОК ЗГІДНО З ТЗ ---
@@ -63,10 +69,7 @@ export const RegisterPage = () => {
         duration: 2000,
       });
 
-      console.log("User registered successfully:", data);
-
-      // Перехід на головну сторінку списку подій
-      navigate("/events");
+      navigate(redirectTo);
 
       // -------------------------------
     } catch (err: unknown) {
@@ -172,27 +175,6 @@ export const RegisterPage = () => {
               {isLoading ? "Creating account..." : "Create Account"}
             </button>
           </form>
-
-          <div className="my-6 flex items-center justify-between">
-            <span className="w-1/3 border-b border-slate-200"></span>
-            <span className="text-xs text-slate-400 uppercase font-medium">
-              OR
-            </span>
-            <span className="w-1/3 border-b border-slate-200"></span>
-          </div>
-
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={() => {
-                toast.success("Google Login Success!");
-                setTimeout(() => navigate("/events"), 1000);
-              }}
-              onError={() => toast.error("Google Auth Failed")}
-              theme="outline"
-              shape="pill"
-              width="320px"
-            />
-          </div>
 
           <p className="mt-8 text-center text-sm text-slate-500 font-medium">
             Already have an account?{" "}

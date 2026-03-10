@@ -4,49 +4,56 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { LoginPage } from "./pages/Auth/LoginPage";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { RegisterPage } from "./pages/Auth/RegisterPage";
 import { Toaster } from "react-hot-toast";
 import { EventsPage } from "./pages/Events/EventsPage";
 import { EventDetailsPage } from "./pages/Events/EventDetailsPage";
 import { CreateEventPage } from "./pages/Events/CreateEventPage";
-import { MyEventsPage } from "./pages/Events/MyEventsPage"; 
+import { MyEventsPage } from "./pages/Events/MyEventsPage";
+import { ProfilePage } from "./pages/Profile/ProfilePage";
+import { AppHeader } from "./components/layout/AppHeader";
+import { AppFooter } from "./components/layout/AppFooter";
+
+const HomeRoute = () => <Navigate to="/register" replace />;
 
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
+  const location = useLocation();
   const token = localStorage.getItem("token");
-  // Якщо токена немає — редірект на реєстрацію (згідно з твоїм вибором)
-  return token ? <>{children}</> : <Navigate to="/register" replace />;
+  return token ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/register" replace state={{ from: location.pathname }} />
+  );
 };
 
-/**
- * 🔓 PublicRoute - запобігає доступу залогінених користувачів до сторінок входу/реєстрації.
- */
 const PublicRoute = ({ children }: { children: ReactNode }) => {
-  const token = localStorage.getItem("token");
-  return token ? <Navigate to="/events" replace /> : <>{children}</>;
+  return <>{children}</>;
+};
+
+const AppChrome = () => {
+  const location = useLocation();
+  const hideHeader =
+    location.pathname === "/register" || location.pathname === "/login";
+
+  return <>{!hideHeader && <AppHeader />}</>;
 };
 
 function App() {
-  const googleClientId =
-    "976945532072-rllahg5pldtrm2f0gcpr72n0avh61qtj.apps.googleusercontent.com";
-
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
-      {/* Контейнер для сповіщень (toast) */}
+    <>
       <Toaster position="top-center" reverseOrder={false} />
 
       <Router>
+        <AppChrome />
         <Routes>
-          {/* Автоматичний перехід на головну при відкритті сайту */}
-          <Route path="/" element={<Navigate to="/events" replace />} />
+          <Route path="/" element={<HomeRoute />} />
 
-          {/* Публічні маршрути: перегляд подій доступний усім */}
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:id" element={<EventDetailsPage />} />
 
-          {/* Сторінки авторизації: закриті для тих, хто вже увійшов */}
           <Route
             path="/register"
             element={
@@ -64,7 +71,6 @@ function App() {
             }
           />
 
-          {/* Приватні маршрути: створення подій та календар */}
           <Route
             path="/create-event"
             element={
@@ -74,7 +80,6 @@ function App() {
             }
           />
 
-          {/* ПІДКЛЮЧЕНО: Календар тепер доступний тільки залогіненим */}
           <Route
             path="/my-events"
             element={
@@ -84,11 +89,20 @@ function App() {
             }
           />
 
-          {/* Обробка неіснуючих шляхів: повернення на головну */}
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <ProfilePage />
+              </PrivateRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/events" replace />} />
         </Routes>
+        <AppFooter />
       </Router>
-    </GoogleOAuthProvider>
+    </>
   );
 }
 

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "../../api/baseUrl";
 
 export const CreateEventPage = () => {
   const navigate = useNavigate();
@@ -9,6 +10,7 @@ export const CreateEventPage = () => {
 
   const [formData, setFormData] = useState({
     title: "",
+    category: "Інше",
     description: "",
     date: "",
     time: "",
@@ -21,6 +23,15 @@ export const CreateEventPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Перевірка на авторизацію
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!user.id) {
+      toast.error("You must be logged in to create an event");
+      setLoading(false);
+      navigate("/login");
+      return;
+    }
+
     // Валідація дати: не в минулому
     const selectedDate = new Date(`${formData.date}T${formData.time}`);
     if (selectedDate < new Date()) {
@@ -29,10 +40,21 @@ export const CreateEventPage = () => {
       return;
     }
 
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    // Перевірка обов'язкових полів
+    if (
+      !formData.title ||
+      !formData.description ||
+      !formData.date ||
+      !formData.time ||
+      !formData.location
+    ) {
+      toast.error("Please fill in all required fields");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await fetch("http://localhost:3000/auth/events", {
+      const response = await fetch(`${API_BASE_URL}/auth/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -47,9 +69,14 @@ export const CreateEventPage = () => {
         toast.success("Event created successfully!");
         navigate(`/events/${newEvent.id}`); // Редірект на сторінку деталей
       } else {
-        toast.error("Failed to create event");
+        const errorData = await response.json();
+        const errorMessage =
+          errorData.message || errorData.error || "Failed to create event";
+        toast.error(errorMessage);
+        console.error("Event creation error:", errorData);
       }
-    } catch {
+    } catch (error) {
+      console.error("Network error:", error);
       toast.error("Network error. Please try again.");
     } finally {
       setLoading(false);
@@ -104,6 +131,26 @@ export const CreateEventPage = () => {
                 setFormData({ ...formData, description: e.target.value })
               }
             ></textarea>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold mb-2 ml-1">
+              Category
+            </label>
+            <select
+              value={formData.category}
+              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all cursor-pointer"
+              onChange={(e) =>
+                setFormData({ ...formData, category: e.target.value })
+              }
+            >
+              <option value="Конференції">Конференції</option>
+              <option value="Мітапи">Мітапи</option>
+              <option value="Воркшопи">Воркшопи</option>
+              <option value="Вебінари">Вебінари</option>
+              <option value="Нетворкінг">Нетворкінг</option>
+              <option value="Інше">Інше</option>
+            </select>
           </div>
 
           {/* Date & Time Row */}

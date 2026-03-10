@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { BsFillBookmarkStarFill, BsEnvelope, BsLock } from "react-icons/bs";
-import { GoogleLogin } from "@react-oauth/google";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "../../api/baseUrl";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo =
+    (location.state as { from?: string } | null)?.from || "/events";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +19,7 @@ export const LoginPage = () => {
 
     try {
       // 1. РЕАЛЬНИЙ ЗАПИТ ДО БЕКЕНДУ
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -45,10 +48,7 @@ export const LoginPage = () => {
 
       // 3. УСПІХ
       toast.success("Welcome back!", { icon: "👋" });
-      console.log("Login success:", data);
-
-      // Перенаправлення на головну сторінку подій
-      navigate("/events");
+      navigate(redirectTo);
 
       // ----------------------------------------
     } catch (err: unknown) {
@@ -133,30 +133,6 @@ export const LoginPage = () => {
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </button>
-
-              <div className="my-6 flex items-center justify-between">
-                <span className="w-1/3 border-b border-slate-200"></span>
-                <span className="text-xs text-slate-400 uppercase font-medium">
-                  or
-                </span>
-                <span className="w-1/3 border-b border-slate-200"></span>
-              </div>
-
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={(credentialResponse) => {
-                    toast.success("Google Login Success!");
-                    console.log("JWT:", credentialResponse.credential);
-                    navigate("/events");
-                  }}
-                  onError={() => {
-                    toast.error("Google Auth Failed");
-                  }}
-                  theme="outline"
-                  shape="pill"
-                  width="100%"
-                />
-              </div>
             </div>
           </form>
 

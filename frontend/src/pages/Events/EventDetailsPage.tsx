@@ -9,6 +9,7 @@ import {
   BsPersonDash,
 } from "react-icons/bs";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "../../api/baseUrl";
 
 interface Participant {
   id: string;
@@ -24,6 +25,7 @@ interface EventDetails {
   capacity?: number | null;
   userId: string;
   participants: Participant[];
+  _count?: { participants: number };
 }
 
 export const EventDetailsPage = () => {
@@ -35,12 +37,18 @@ export const EventDetailsPage = () => {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const isParticipant = event?.participants.some((p) => p.id === user.id);
+  const isOrganizer = event?.userId === user.id;
+  const isFull = Boolean(
+    event?.capacity &&
+    (event?._count?.participants || event?.participants.length || 0) >=
+      event.capacity,
+  );
 
   // Використовуємо useEffect з функцією всередині, щоб уникнути помилки exhaustive-deps
   useEffect(() => {
     const fetchEvent = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/auth/events/${id}`);
+        const response = await fetch(`${API_BASE_URL}/auth/events/${id}`);
         if (!response.ok) throw new Error();
         const data = await response.json();
         setEvent(data);
@@ -65,7 +73,7 @@ export const EventDetailsPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/auth/events/${id}/${endpoint}`,
+        `${API_BASE_URL}/auth/events/${id}/${endpoint}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -80,7 +88,7 @@ export const EventDetailsPage = () => {
 
         // Оновлюємо дані вручну після успішної дії
         const updatedResponse = await fetch(
-          `http://localhost:3000/auth/events/${id}`,
+          `${API_BASE_URL}/auth/events/${id}`,
         );
         const updatedData = await updatedResponse.json();
         setEvent(updatedData);
@@ -92,6 +100,76 @@ export const EventDetailsPage = () => {
       toast.error("Network error");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!event || !isOrganizer) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this event?",
+    );
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/events/${event.id}?userId=${user.id}`,
+        { method: "DELETE" },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete event");
+      }
+
+      toast.success("Event deleted");
+      navigate("/events");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Network error";
+      toast.error(message);
+    }
+  };
+
+  const handleEditEvent = async () => {
+    if (!event || !isOrganizer) return;
+
+    const nextTitle = window.prompt("Event title", event.title);
+    if (nextTitle === null || !nextTitle.trim()) return;
+
+    const nextLocation = window.prompt("Location", event.location || "");
+    if (nextLocation === null || !nextLocation.trim()) return;
+
+    const currentDate = new Date(event.startDate);
+    const defaultDate = currentDate.toISOString().slice(0, 10);
+    const defaultTime = currentDate.toTimeString().slice(0, 5);
+    const nextDate = window.prompt("Date (YYYY-MM-DD)", defaultDate);
+    const nextTime = window.prompt("Time (HH:MM)", defaultTime);
+
+    if (!nextDate || !nextTime) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/events/${event.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.id,
+          title: nextTitle.trim(),
+          location: nextLocation.trim(),
+          date: nextDate,
+          time: nextTime,
+        }),
+      });
+
+      const responseData = await response.json();
+      if (!response.ok) {
+        throw new Error(responseData.message || "Failed to update event");
+      }
+
+      setEvent((prev) => (prev ? { ...prev, ...responseData } : prev));
+      toast.success("Event updated");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Network error";
+      toast.error(message);
     }
   };
 
@@ -146,6 +224,13 @@ export const EventDetailsPage = () => {
               <BsGeoAlt className="text-indigo-600 text-xl" />
               <span className="font-bold text-slate-700">{event.location}</span>
             </div>
+            <div className="flex items-center gap-3 bg-slate-50 px-5 py-3 rounded-2xl border border-slate-100">
+              <BsPeople className="text-indigo-600 text-xl" />
+              <span className="font-bold text-slate-700">
+                {event._count?.participants || event.participants.length} /{" "}
+                {event.capacity || "∞"} participants
+              </span>
+            </div>
           </div>
 
           <h3 className="text-xl font-black mb-4">About this event</h3>
@@ -185,25 +270,46 @@ export const EventDetailsPage = () => {
 
           <button
             onClick={handleToggleJoin}
-            disabled={isProcessing}
+            disabled={isProcessing || (isFull && !isParticipant)}
             // Виправлено: використання rounded-3xl замість довільного значення
             className={`w-full py-5 rounded-3xl font-black flex items-center justify-center gap-3 transition-all active:scale-95 shadow-lg ${
-              isParticipant
-                ? "bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600 shadow-slate-100"
-                : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-100"
+              isFull && !isParticipant
+                ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                : isParticipant
+                  ? "bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600 shadow-slate-100"
+                  : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-100"
             }`}
           >
-            {isParticipant ? (
+            {isFull && !isParticipant ? null : isParticipant ? (
               <BsPersonDash size={22} />
             ) : (
               <BsPersonCheck size={22} />
             )}
             {isProcessing
               ? "Processing..."
-              : isParticipant
-                ? "Leave Event"
-                : "Join Event"}
+              : isFull && !isParticipant
+                ? "Full"
+                : isParticipant
+                  ? "Leave Event"
+                  : "Join Event"}
           </button>
+
+          {isOrganizer && (
+            <div className="mt-4 space-y-3">
+              <button
+                onClick={() => void handleEditEvent()}
+                className="w-full py-4 rounded-3xl font-black text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-all active:scale-95"
+              >
+                Edit Event
+              </button>
+              <button
+                onClick={() => void handleDeleteEvent()}
+                className="w-full py-4 rounded-3xl font-black text-red-600 bg-red-50 hover:bg-red-100 transition-all active:scale-95"
+              >
+                Delete Event
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
