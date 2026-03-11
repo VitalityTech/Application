@@ -30,6 +30,7 @@ Google OAuth setup:
 - Set `VITE_GOOGLE_CLIENT_ID` in Vercel with your real OAuth Web Client ID.
 - In Google Cloud Console -> OAuth 2.0 Client -> Authorized JavaScript origins,
   add your frontend domains (for example `http://localhost:5173` and your `https://<project>.vercel.app`).
+- Google sign-in can fail in Telegram in-app browser because embedded webviews/popup flows are restricted. Ask users to open the same link in an external browser (Chrome/Safari) for Google auth.
 
 ## Run Locally
 
