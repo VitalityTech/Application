@@ -167,7 +167,12 @@ export const CreateEventPage = () => {
               <input
                 type="date"
                 required
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                placeholder="ДД.ММ.Р"
+                value={formData.date}
+                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-slate-900"
+                style={{
+                  colorScheme: "light",
+                }}
                 onClick={(e) => {
                   try {
                     (e.target as HTMLInputElement).showPicker?.();
@@ -188,7 +193,12 @@ export const CreateEventPage = () => {
               <input
                 type="time"
                 required
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                placeholder="--:--"
+                value={formData.time}
+                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-slate-900"
+                style={{
+                  colorScheme: "light",
+                }}
                 onClick={(e) => {
                   try {
                     (e.target as HTMLInputElement).showPicker?.();
