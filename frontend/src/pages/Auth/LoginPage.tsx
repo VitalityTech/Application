@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { BsFillBookmarkStarFill, BsEnvelope, BsLock } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import { API_BASE_URL } from "../../api/baseUrl";
+import { GoogleAuthButton } from "../../components/auth/GoogleAuthButton";
 import {
   getGoogleClientId,
   isGoogleClientIdConfigured,
@@ -233,13 +233,12 @@ export const LoginPage = () => {
 
               <div className="flex flex-col items-center gap-2">
                 {hasGoogleClientId ? (
-                  <GoogleLogin
+                  <GoogleAuthButton
+                    isConfigured={hasGoogleClientId}
+                    label="Вхід через Google"
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-in failed")}
                     text="signin_with"
-                    shape="pill"
-                    theme="outline"
-                    size="large"
                   />
                 ) : (
                   <button
