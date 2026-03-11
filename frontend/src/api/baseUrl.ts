@@ -5,7 +5,7 @@ const normalizeEnvUrl = (value: string | undefined): string | undefined => {
 
   const normalized = value
     .trim()
-    .replace(/^['\"]|['\"]$/g, "")
+    .replace(/^['"]|['"]$/g, "")
     .replace(/\/$/, "");
   return normalized.length > 0 ? normalized : undefined;
 };

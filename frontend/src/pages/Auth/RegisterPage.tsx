@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import {
   BsFillBookmarkStarFill,
@@ -10,6 +9,7 @@ import {
 } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/baseUrl";
+import { GoogleAuthButton } from "../../components/auth/GoogleAuthButton";
 import {
   getGoogleClientId,
   isGoogleClientIdConfigured,
@@ -294,16 +294,12 @@ export const RegisterPage = () => {
 
               <div className="flex flex-col items-center gap-2">
                 {hasGoogleClientId ? (
-                  <GoogleLogin
+                  <GoogleAuthButton
+                    isConfigured={hasGoogleClientId}
+                    label="Вхід через Google"
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-up failed")}
-                    use_fedcm_for_button={false}
-                    type="standard"
-                    text="signup_with"
-                    shape="rectangular"
-                    theme="outline"
-                    size="large"
-                    width="320"
+                    text="continue_with"
                   />
                 ) : (
                   <button
