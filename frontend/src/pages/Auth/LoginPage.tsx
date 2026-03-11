@@ -9,6 +9,7 @@ import {
   getGoogleClientId,
   isGoogleClientIdConfigured,
 } from "../../api/googleClient";
+import { isTelegramInAppBrowser } from "../../utils/inAppBrowser";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export const LoginPage = () => {
     (location.state as { from?: string } | null)?.from || "/events";
   const googleClientId = getGoogleClientId();
   const hasGoogleClientId = isGoogleClientIdConfigured(googleClientId);
+  const isTelegramBrowser = isTelegramInAppBrowser();
 
   const parseResponseBody = async <T,>(response: Response): Promise<T> => {
     const rawText = await response.text();
@@ -232,7 +234,7 @@ export const LoginPage = () => {
               </div>
 
               <div className="flex flex-col items-center gap-2">
-                {hasGoogleClientId ? (
+                {hasGoogleClientId && !isTelegramBrowser ? (
                   <GoogleAuthButton
                     isConfigured={hasGoogleClientId}
                     label="Вхід через Google"
@@ -240,6 +242,15 @@ export const LoginPage = () => {
                     onError={() => toast.error("Google sign-in failed")}
                     text="signin_with"
                   />
+                ) : hasGoogleClientId && isTelegramBrowser ? (
+                  <a
+                    href={window.location.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full max-w-[320px] rounded-full border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 text-center"
+                  >
+                    Відкрити у браузері для Google входу
+                  </a>
                 ) : (
                   <button
                     type="button"
@@ -253,6 +264,12 @@ export const LoginPage = () => {
                   <p className="text-xs text-slate-400 text-center">
                     Додай VITE_GOOGLE_CLIENT_ID у frontend/.env щоб увімкнути
                     Google Login
+                  </p>
+                )}
+                {hasGoogleClientId && isTelegramBrowser && (
+                  <p className="text-xs text-amber-600 text-center">
+                    У вбудованому браузері Telegram Google вхід може бути
+                    заблокований. Відкрийте цю сторінку у Chrome/Safari.
                   </p>
                 )}
               </div>
