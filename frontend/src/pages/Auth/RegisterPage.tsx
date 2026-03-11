@@ -14,7 +14,12 @@ import {
   getGoogleClientId,
   isGoogleClientIdConfigured,
 } from "../../api/googleClient";
-import { isTelegramInAppBrowser } from "../../utils/inAppBrowser";
+import {
+  getTelegramExternalBrowserHref,
+  isAndroidDevice,
+  isIosDevice,
+  isTelegramInAppBrowser,
+} from "../../utils/inAppBrowser";
 
 export const RegisterPage = () => {
   const [fullName, setFullName] = useState("");
@@ -28,6 +33,23 @@ export const RegisterPage = () => {
   const googleClientId = getGoogleClientId();
   const hasGoogleClientId = isGoogleClientIdConfigured(googleClientId);
   const isTelegramBrowser = isTelegramInAppBrowser();
+  const externalBrowserHref =
+    typeof window !== "undefined"
+      ? getTelegramExternalBrowserHref(window.location.href)
+      : "/register";
+  const externalBrowserLabel = isAndroidDevice()
+    ? "Відкрити в Chrome"
+    : isIosDevice()
+      ? "Відкрити в Safari"
+      : "Відкрити у зовнішньому браузері";
+
+  const handleOpenExternalBrowser = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.location.assign(externalBrowserHref);
+  };
 
   const parseResponseBody = async <T,>(response: Response): Promise<T> => {
     const rawText = await response.text();
@@ -190,6 +212,19 @@ export const RegisterPage = () => {
     }
   };
 
+  const handleCopyLink = async () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Посилання скопійовано. Відкрий у Chrome/Safari.");
+    } catch {
+      toast.error("Не вдалося скопіювати посилання");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -304,14 +339,22 @@ export const RegisterPage = () => {
                     text="continue_with"
                   />
                 ) : hasGoogleClientId && isTelegramBrowser ? (
-                  <a
-                    href={window.location.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full max-w-[320px] rounded-full border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 text-center"
-                  >
-                    Відкрити у браузері для Google входу
-                  </a>
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleOpenExternalBrowser}
+                      className="w-full max-w-[320px] rounded-full border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 text-center"
+                    >
+                      {externalBrowserLabel}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="w-full max-w-[320px] rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600"
+                    >
+                      Скопіювати посилання
+                    </button>
+                  </>
                 ) : (
                   <button
                     type="button"
