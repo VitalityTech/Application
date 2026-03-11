@@ -27,6 +27,24 @@ export const RegisterPage = () => {
   const googleClientId = getGoogleClientId();
   const hasGoogleClientId = isGoogleClientIdConfigured(googleClientId);
 
+  const parseResponseBody = async <T,>(response: Response): Promise<T> => {
+    const rawText = await response.text();
+    if (!rawText) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(rawText) as T;
+    } catch {
+      if (!response.ok) {
+        throw new Error(
+          "Сервер повернув не JSON. Перевір VITE_API_URL у налаштуваннях середовища.",
+        );
+      }
+      throw new Error("Отримано некоректну відповідь сервера");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -78,7 +96,11 @@ export const RegisterPage = () => {
       });
 
       clearTimeout(timeoutId);
-      const data = await response.json();
+      const data = await parseResponseBody<{
+        access_token?: string;
+        user?: unknown;
+        message?: string;
+      }>(response);
 
       if (!response.ok) {
         const message =
@@ -140,7 +162,11 @@ export const RegisterPage = () => {
         body: JSON.stringify({ credential: credentialResponse.credential }),
       });
 
-      const data = await response.json();
+      const data = await parseResponseBody<{
+        access_token?: string;
+        user?: unknown;
+        message?: string;
+      }>(response);
       if (!response.ok) {
         throw new Error(data.message || "Google sign-up failed");
       }
