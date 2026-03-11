@@ -297,13 +297,10 @@ export const RegisterPage = () => {
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-up failed")}
-                    use_fedcm_for_button={false}
-                    type="standard"
-                    text="signup_with"
-                    shape="rectangular"
+                    text="continue_with"
+                    shape="pill"
                     theme="outline"
                     size="large"
-                    width="320"
                   />
                 ) : (
                   <button

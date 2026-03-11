@@ -236,13 +236,10 @@ export const LoginPage = () => {
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-in failed")}
-                    use_fedcm_for_button={false}
-                    type="standard"
                     text="signin_with"
-                    shape="rectangular"
+                    shape="pill"
                     theme="outline"
                     size="large"
-                    width="320"
                   />
                 ) : (
                   <button

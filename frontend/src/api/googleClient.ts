@@ -8,7 +8,7 @@ export const getGoogleClientId = (): string | undefined => {
     return undefined;
   }
 
-  const normalized = rawValue.trim().replace(/^['\"]|['\"]$/g, "");
+  const normalized = rawValue.trim().replace(/^['"]|['"]$/g, "");
   return normalized.length > 0 ? normalized : undefined;
 };
 
