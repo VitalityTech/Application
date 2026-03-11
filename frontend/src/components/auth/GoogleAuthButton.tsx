@@ -48,7 +48,8 @@ export const GoogleAuthButton = ({
           width="320"
           logo_alignment="left"
           containerProps={{
-            className: "h-full w-full cursor-pointer [&>div]:!h-full [&>div]:!w-full",
+            className:
+              "h-full w-full cursor-pointer [&>div]:!h-full [&>div]:!w-full",
           }}
         />
       </div>

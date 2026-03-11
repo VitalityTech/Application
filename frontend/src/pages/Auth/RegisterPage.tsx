@@ -17,6 +17,7 @@ import {
 import {
   getTelegramExternalBrowserHref,
   isAndroidDevice,
+  isIosDevice,
   isTelegramInAppBrowser,
 } from "../../utils/inAppBrowser";
 
@@ -38,7 +39,17 @@ export const RegisterPage = () => {
       : "/register";
   const externalBrowserLabel = isAndroidDevice()
     ? "Відкрити в Chrome"
-    : "Відкрити у зовнішньому браузері";
+    : isIosDevice()
+      ? "Відкрити в Safari"
+      : "Відкрити у зовнішньому браузері";
+
+  const handleOpenExternalBrowser = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.location.assign(externalBrowserHref);
+  };
 
   const parseResponseBody = async <T,>(response: Response): Promise<T> => {
     const rawText = await response.text();
@@ -329,14 +340,13 @@ export const RegisterPage = () => {
                   />
                 ) : hasGoogleClientId && isTelegramBrowser ? (
                   <>
-                    <a
-                      href={externalBrowserHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={handleOpenExternalBrowser}
                       className="w-full max-w-[320px] rounded-full border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 text-center"
                     >
                       {externalBrowserLabel}
-                    </a>
+                    </button>
                     <button
                       type="button"
                       onClick={handleCopyLink}

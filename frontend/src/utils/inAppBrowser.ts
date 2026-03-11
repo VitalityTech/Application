@@ -1,5 +1,6 @@
 const TELEGRAM_UA_MARKER = "telegram";
 const ANDROID_UA_MARKER = "android";
+const IOS_UA_REGEX = /iphone|ipad|ipod/i;
 
 export const isTelegramInAppBrowser = (): boolean => {
   if (typeof navigator === "undefined") {
@@ -17,12 +18,25 @@ export const isAndroidDevice = (): boolean => {
   return navigator.userAgent.toLowerCase().includes(ANDROID_UA_MARKER);
 };
 
+export const isIosDevice = (): boolean => {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return IOS_UA_REGEX.test(navigator.userAgent);
+};
+
 export const getTelegramExternalBrowserHref = (currentUrl: string): string => {
   if (!isTelegramInAppBrowser()) {
     return currentUrl;
   }
 
   if (!isAndroidDevice()) {
+    if (isIosDevice()) {
+      // iOS Telegram usually opens x-safari-* links in the system Safari browser.
+      return `x-safari-${currentUrl}`;
+    }
+
     return currentUrl;
   }
 
