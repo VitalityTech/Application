@@ -96,11 +96,15 @@ export const RegisterPage = () => {
       });
 
       clearTimeout(timeoutId);
+      console.log(
+        `[Register] Response status: ${response.status}, ok: ${response.ok}`,
+      );
       const data = await parseResponseBody<{
         access_token?: string;
         user?: unknown;
         message?: string;
       }>(response);
+      console.log(`[Register] Parsed data:`, data);
 
       if (!response.ok) {
         const message =
@@ -110,10 +114,6 @@ export const RegisterPage = () => {
         throw new Error(message);
       }
 
-      // --- ДОДАНИЙ БЛОК ЗГІДНО З ТЗ ---
-
-      // 3. ЗБЕРЕЖЕННЯ СЕСІЇ (JWT)
-      // Зберігаємо токен та дані користувача для подальших запитів
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
         localStorage.setItem("user", JSON.stringify(data.user));
@@ -131,7 +131,9 @@ export const RegisterPage = () => {
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const error = err as Error;
-      console.error("Registration error:", error);
+      console.error("[Register] Error:", error);
+      console.error("[Register] Stack:", error.stack);
+      console.log("[Register] API_BASE_URL was:", API_BASE_URL);
       if (error.name === "AbortError") {
         toast.error("Сервер недоступний. Перевірте підключення до мережі.", {
           duration: 5000,
@@ -295,10 +297,13 @@ export const RegisterPage = () => {
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-up failed")}
-                    text="continue_with"
-                    shape="pill"
+                    use_fedcm_for_button={false}
+                    type="standard"
+                    text="signup_with"
+                    shape="rectangular"
                     theme="outline"
                     size="large"
+                    width="320"
                   />
                 ) : (
                   <button
