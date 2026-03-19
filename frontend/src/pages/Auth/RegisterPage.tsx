@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
-import { GoogleLogin } from "@react-oauth/google";
 import type { CredentialResponse } from "@react-oauth/google";
 import {
   BsFillBookmarkStarFill,
@@ -10,10 +9,17 @@ import {
 } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../../api/baseUrl";
+import { GoogleAuthButton } from "../../components/auth/GoogleAuthButton";
 import {
   getGoogleClientId,
   isGoogleClientIdConfigured,
 } from "../../api/googleClient";
+import {
+  getTelegramExternalBrowserHref,
+  isAndroidDevice,
+  isIosDevice,
+  isTelegramInAppBrowser,
+} from "../../utils/inAppBrowser";
 
 export const RegisterPage = () => {
   const [fullName, setFullName] = useState("");
@@ -26,6 +32,42 @@ export const RegisterPage = () => {
     (location.state as { from?: string } | null)?.from || "/events";
   const googleClientId = getGoogleClientId();
   const hasGoogleClientId = isGoogleClientIdConfigured(googleClientId);
+  const isTelegramBrowser = isTelegramInAppBrowser();
+  const externalBrowserHref =
+    typeof window !== "undefined"
+      ? getTelegramExternalBrowserHref(window.location.href)
+      : "/register";
+  const externalBrowserLabel = isAndroidDevice()
+    ? "Відкрити в Chrome"
+    : isIosDevice()
+      ? "Відкрити в Safari"
+      : "Відкрити у зовнішньому браузері";
+
+  const handleOpenExternalBrowser = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.location.assign(externalBrowserHref);
+  };
+
+  const parseResponseBody = async <T,>(response: Response): Promise<T> => {
+    const rawText = await response.text();
+    if (!rawText) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(rawText) as T;
+    } catch {
+      if (!response.ok) {
+        throw new Error(
+          "Сервер повернув не JSON. Перевір VITE_API_URL у налаштуваннях середовища.",
+        );
+      }
+      throw new Error("Отримано некоректну відповідь сервера");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +120,15 @@ export const RegisterPage = () => {
       });
 
       clearTimeout(timeoutId);
-      const data = await response.json();
+      console.log(
+        `[Register] Response status: ${response.status}, ok: ${response.ok}`,
+      );
+      const data = await parseResponseBody<{
+        access_token?: string;
+        user?: unknown;
+        message?: string;
+      }>(response);
+      console.log(`[Register] Parsed data:`, data);
 
       if (!response.ok) {
         const message =
@@ -88,10 +138,6 @@ export const RegisterPage = () => {
         throw new Error(message);
       }
 
-      // --- ДОДАНИЙ БЛОК ЗГІДНО З ТЗ ---
-
-      // 3. ЗБЕРЕЖЕННЯ СЕСІЇ (JWT)
-      // Зберігаємо токен та дані користувача для подальших запитів
       if (data.access_token) {
         localStorage.setItem("token", data.access_token);
         localStorage.setItem("user", JSON.stringify(data.user));
@@ -109,7 +155,9 @@ export const RegisterPage = () => {
     } catch (err: unknown) {
       clearTimeout(timeoutId);
       const error = err as Error;
-      console.error("Registration error:", error);
+      console.error("[Register] Error:", error);
+      console.error("[Register] Stack:", error.stack);
+      console.log("[Register] API_BASE_URL was:", API_BASE_URL);
       if (error.name === "AbortError") {
         toast.error("Сервер недоступний. Перевірте підключення до мережі.", {
           duration: 5000,
@@ -140,7 +188,11 @@ export const RegisterPage = () => {
         body: JSON.stringify({ credential: credentialResponse.credential }),
       });
 
-      const data = await response.json();
+      const data = await parseResponseBody<{
+        access_token?: string;
+        user?: unknown;
+        message?: string;
+      }>(response);
       if (!response.ok) {
         throw new Error(data.message || "Google sign-up failed");
       }
@@ -157,6 +209,19 @@ export const RegisterPage = () => {
       toast.error(error.message || "Google sign-up failed");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success("Посилання скопійовано. Відкрий у Chrome/Safari.");
+    } catch {
+      toast.error("Не вдалося скопіювати посилання");
     }
   };
 
@@ -265,15 +330,31 @@ export const RegisterPage = () => {
               </div>
 
               <div className="flex flex-col items-center gap-2">
-                {hasGoogleClientId ? (
-                  <GoogleLogin
+                {hasGoogleClientId && !isTelegramBrowser ? (
+                  <GoogleAuthButton
+                    isConfigured={hasGoogleClientId}
+                    label="Вхід через Google"
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-up failed")}
                     text="continue_with"
-                    shape="pill"
-                    theme="outline"
-                    size="large"
                   />
+                ) : hasGoogleClientId && isTelegramBrowser ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleOpenExternalBrowser}
+                      className="w-full max-w-[320px] rounded-full border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 text-center"
+                    >
+                      {externalBrowserLabel}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyLink}
+                      className="w-full max-w-[320px] rounded-full border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600"
+                    >
+                      Скопіювати посилання
+                    </button>
+                  </>
                 ) : (
                   <button
                     type="button"
@@ -287,6 +368,12 @@ export const RegisterPage = () => {
                   <p className="text-xs text-slate-400 text-center">
                     Додай VITE_GOOGLE_CLIENT_ID у frontend/.env щоб увімкнути
                     Google Login
+                  </p>
+                )}
+                {hasGoogleClientId && isTelegramBrowser && (
+                  <p className="text-xs text-amber-600 text-center">
+                    У вбудованому браузері Telegram Google вхід може бути
+                    заблокований. Відкрийте цю сторінку у Chrome/Safari.
                   </p>
                 )}
               </div>
