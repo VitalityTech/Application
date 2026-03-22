@@ -18,8 +18,6 @@ import { AppHeader } from "./components/layout/AppHeader";
 import { AppFooter } from "./components/layout/AppFooter";
 import AssistantPage from "./pages/Assistant/AssistantPage";
 
-const HomeRoute = () => <Navigate to="/register" replace />;
-
 const PrivateRoute = ({ children }: { children: ReactNode }) => {
   const location = useLocation();
   const token = localStorage.getItem("token");
@@ -52,11 +50,18 @@ function App() {
           <AppChrome />
           <main className="flex-1">
             <Routes>
-              <Route path="/" element={<HomeRoute />} />
+              <Route path="/" element={<EventsPage />} />
 
               <Route path="/events" element={<EventsPage />} />
               <Route path="/events/:id" element={<EventDetailsPage />} />
-              <Route path="/assistant" element={<AssistantPage />} />
+              <Route
+                path="/assistant"
+                element={
+                  <PrivateRoute>
+                    <AssistantPage />
+                  </PrivateRoute>
+                }
+              />
 
               <Route
                 path="/register"
@@ -84,14 +89,7 @@ function App() {
                 }
               />
 
-              <Route
-                path="/my-events"
-                element={
-                  <PrivateRoute>
-                    <MyEventsPage />
-                  </PrivateRoute>
-                }
-              />
+              <Route path="/my-events" element={<MyEventsPage />} />
 
               <Route
                 path="/profile"

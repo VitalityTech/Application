@@ -20,11 +20,11 @@ const CATEGORY_MAP: Record<string, string> = {
   food: "bg-emerald-50 text-emerald-600 border-emerald-100",
   business: "bg-indigo-50 text-indigo-600 border-indigo-100",
   charity: "bg-red-50 text-red-600 border-red-100",
-  Конференції: "bg-blue-50 text-blue-600 border-blue-100",
-  Мітапи: "bg-purple-50 text-purple-600 border-purple-100",
-  Воркшопи: "bg-pink-50 text-pink-600 border-pink-100",
-  Вебінари: "bg-emerald-50 text-emerald-600 border-emerald-100",
-  Нетворкінг: "bg-orange-50 text-orange-600 border-orange-100",
+  конференції: "bg-blue-50 text-blue-600 border-blue-100",
+  мітапи: "bg-purple-50 text-purple-600 border-purple-100",
+  воркшопи: "bg-pink-50 text-pink-600 border-pink-100",
+  вебінари: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  нетворкінг: "bg-orange-50 text-orange-600 border-orange-100",
 };
 
 const getCategoryStyles = (category: string) => {
@@ -57,6 +57,61 @@ const CATEGORY_OPTIONS = [
   "Інше",
 ];
 
+const DEMO_EVENTS: Event[] = [
+  {
+    id: "demo-tech-meetup",
+    title: "Spring Tech Meetup",
+    category: "Мітапи",
+    description:
+      "Обговорення AI-трендів, NestJS best practices та networking з розробниками.",
+    startDate: "2026-03-29T14:00:00.000Z",
+    location: "Unit City, Київ",
+    capacity: null,
+    visibility: "PUBLIC",
+    participants: [],
+    _count: { participants: 0 },
+  },
+  {
+    id: "demo-cyber-night",
+    title: "CyberPunk Night",
+    category: "Воркшопи",
+    description:
+      "Тематична подія про digital-art, музику та live-перформанси у стилі кіберпанк.",
+    startDate: "2026-03-25T17:00:00.000Z",
+    location: "Secret Bunker, вулиця Хрещатик, 1",
+    capacity: null,
+    visibility: "PUBLIC",
+    participants: [],
+    _count: { participants: 0 },
+  },
+  {
+    id: "demo-business-network",
+    title: "Startup Networking Evening",
+    category: "Нетворкінг",
+    description:
+      "Швидкі знайомства для фаундерів, маркетологів і продакт-менеджерів.",
+    startDate: "2026-04-02T15:30:00.000Z",
+    location: "Kooperativ, Київ",
+    capacity: 80,
+    visibility: "PUBLIC",
+    participants: [],
+    _count: { participants: 0 },
+  },
+  {
+    id: "demo-webinar-growth",
+    title: "Growth Webinar: From Idea to Launch",
+    category: "Вебінари",
+    description:
+      "Практичний вебінар про валідацію ідеї, MVP та перших користувачів.",
+    startDate: "2026-04-05T16:00:00.000Z",
+    location: "Online",
+    capacity: null,
+    visibility: "PUBLIC",
+    participants: [],
+    _count: { participants: 0 },
+  },
+];
+
 export const EventsPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [search, setSearch] = useState("");
@@ -71,10 +126,13 @@ export const EventsPage = () => {
 
   useEffect(() => {
     const fetchEvents = async () => {
+      if (!user.id) {
+        setEvents(DEMO_EVENTS);
+        return;
+      }
+
       try {
-        const endpoint = user.id
-          ? `${API_BASE_URL}/auth/users/me/events?userId=${user.id}`
-          : `${API_BASE_URL}/auth/events`;
+        const endpoint = `${API_BASE_URL}/auth/users/me/events?userId=${user.id}`;
 
         const response = await fetch(endpoint);
         const data = await response.json();
@@ -199,12 +257,20 @@ export const EventsPage = () => {
               );
               const isProcessing = processingEventId === event.id;
               const disableJoin = Boolean(isFull && !isParticipant);
+              const isGuest = !user.id;
 
               return (
                 <Link
                   key={event.id}
                   to={`/events/${event.id}`}
-                  className="bg-white rounded-[28px] sm:rounded-4xl p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col h-full hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                  onClick={(e) => {
+                    if (isGuest) e.preventDefault();
+                  }}
+                  className={`bg-white rounded-[28px] sm:rounded-4xl p-6 sm:p-8 border border-slate-100 shadow-sm flex flex-col h-full transition-all duration-300 ${
+                    isGuest
+                      ? "cursor-default"
+                      : "cursor-pointer hover:shadow-xl hover:-translate-y-1"
+                  }`}
                 >
                   <div className="mb-6">
                     <div className="flex items-start justify-between gap-3 mb-3">
@@ -267,29 +333,42 @@ export const EventsPage = () => {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      void handleToggleJoin(event);
-                    }}
-                    disabled={isProcessing || disableJoin}
-                    className={`w-full py-4 rounded-2xl font-black text-center transition-all active:scale-95 shadow-lg ${
-                      disableJoin
-                        ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
-                        : isParticipant
-                          ? "bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600 shadow-none"
-                          : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-100"
-                    }`}
-                  >
-                    {isProcessing
-                      ? "Processing..."
-                      : disableJoin
-                        ? "Full"
-                        : isParticipant
-                          ? "Leave Event"
-                          : "Join Event"}
-                  </button>
+                  {isGuest ? (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate("/login");
+                      }}
+                      className="w-full py-4 rounded-2xl font-black text-center transition-all active:scale-95 bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100"
+                    >
+                      Login to Join
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        void handleToggleJoin(event);
+                      }}
+                      disabled={isProcessing || disableJoin}
+                      className={`w-full py-4 rounded-2xl font-black text-center transition-all active:scale-95 shadow-lg ${
+                        disableJoin
+                          ? "bg-slate-100 text-slate-400 cursor-not-allowed shadow-none"
+                          : isParticipant
+                            ? "bg-slate-100 text-slate-700 hover:bg-red-50 hover:text-red-600 shadow-none"
+                            : "bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-100"
+                      }`}
+                    >
+                      {isProcessing
+                        ? "Processing..."
+                        : disableJoin
+                          ? "Full"
+                          : isParticipant
+                            ? "Leave Event"
+                            : "Join Event"}
+                    </button>
+                  )}
                 </Link>
               );
             })

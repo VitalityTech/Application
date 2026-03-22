@@ -7,6 +7,7 @@ export const AppHeader = () => {
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAuthorized = Boolean(token && user?.id);
 
   const navItemClass = (path: string) =>
     `text-sm font-bold transition-colors ${
@@ -32,20 +33,22 @@ export const AppHeader = () => {
             <span>Evently</span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/events" className={navItemClass("/events")}>
-              Events
-            </Link>
-            <Link to="/my-events" className={navItemClass("/my-events")}>
-              My Events
-            </Link>
-            <Link to="/profile" className={navItemClass("/profile")}>
-              Profile
-            </Link>
-          </nav>
+          {isAuthorized && (
+            <nav className="hidden md:flex items-center gap-6">
+              <Link to="/events" className={navItemClass("/events")}>
+                Events
+              </Link>
+              <Link to="/my-events" className={navItemClass("/my-events")}>
+                My Events
+              </Link>
+              <Link to="/profile" className={navItemClass("/profile")}>
+                Profile
+              </Link>
+            </nav>
+          )}
         </div>
 
-        {token ? (
+        {isAuthorized ? (
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link
               to="/assistant"
