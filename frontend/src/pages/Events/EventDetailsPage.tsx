@@ -19,6 +19,7 @@ interface Participant {
 interface EventDetails {
   id: string;
   title: string;
+  category?: string;
   description: string;
   startDate: string;
   location: string;
@@ -43,6 +44,9 @@ export const EventDetailsPage = () => {
     (event?._count?.participants || event?.participants.length || 0) >=
       event.capacity,
   );
+  const smartMatches = (event?.participants || [])
+    .filter((participant) => participant.id !== user.id)
+    .slice(0, 3);
 
   // Використовуємо useEffect з функцією всередині, щоб уникнути помилки exhaustive-deps
   useEffect(() => {
@@ -173,6 +177,55 @@ export const EventDetailsPage = () => {
     }
   };
 
+  const buildShareText = () => {
+    if (!event) return "";
+
+    const eventDate = new Date(event.startDate).toLocaleString("uk-UA", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+
+    return [
+      `Подія: ${event.title}`,
+      `Категорія: ${event.category || "Інше"}`,
+      `Дата: ${eventDate}`,
+      `Локація: ${event.location}`,
+      `Долучайся: ${window.location.origin}/events/${event.id}`,
+    ].join("\n");
+  };
+
+  const handleShareEvent = async () => {
+    if (!event) return;
+
+    const sharePayload = {
+      title: event.title,
+      text: `Приєднуйся до події ${event.title} в Evently`,
+      url: `${window.location.origin}/events/${event.id}`,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(sharePayload);
+        toast.success("Поділились подією");
+        return;
+      }
+
+      await navigator.clipboard.writeText(buildShareText());
+      toast.success("Текст запрошення скопійовано");
+    } catch {
+      toast.error("Не вдалося поділитися подією");
+    }
+  };
+
+  const handleCopyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(buildShareText());
+      toast.success("Invite card скопійовано");
+    } catch {
+      toast.error("Не вдалося скопіювати invite card");
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -241,6 +294,32 @@ export const EventDetailsPage = () => {
         </div>
 
         <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 h-fit sticky top-8">
+          <div className="mb-6 rounded-3xl border border-indigo-100 bg-linear-to-r from-indigo-50 via-white to-violet-50 p-5">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-indigo-600 mb-2">
+              Share Card
+            </p>
+            <p className="text-slate-700 font-bold line-clamp-1">
+              {event.title}
+            </p>
+            <p className="text-slate-500 text-sm mt-1 line-clamp-1">
+              {event.location}
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => void handleShareEvent()}
+                className="flex-1 py-2.5 rounded-2xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors"
+              >
+                Share
+              </button>
+              <button
+                onClick={() => void handleCopyInvite()}
+                className="flex-1 py-2.5 rounded-2xl bg-white text-slate-700 text-sm font-bold border border-slate-200 hover:bg-slate-50 transition-colors"
+              >
+                Copy Card
+              </button>
+            </div>
+          </div>
+
           <h3 className="text-xl font-black mb-6 flex items-center gap-3">
             <BsPeople className="text-indigo-600 text-2xl" />
             Participants ({event.participants?.length || 0})
@@ -264,6 +343,39 @@ export const EventDetailsPage = () => {
             ) : (
               <p className="text-slate-400 font-medium text-center py-4 italic">
                 No one joined yet.
+              </p>
+            )}
+          </div>
+
+          <div className="mb-8 rounded-3xl border border-slate-100 bg-slate-50 p-4">
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500 mb-3">
+              Smart Match
+            </p>
+
+            {smartMatches.length > 0 ? (
+              <div className="space-y-2.5">
+                {smartMatches.map((person) => (
+                  <div
+                    key={person.id}
+                    className="flex items-center justify-between rounded-2xl bg-white border border-slate-100 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-7 h-7 rounded-full bg-violet-100 text-violet-700 text-xs font-black flex items-center justify-center shrink-0">
+                        {person.fullName.charAt(0).toUpperCase()}
+                      </span>
+                      <span className="text-sm font-semibold text-slate-700 truncate">
+                        {person.fullName}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 shrink-0">
+                      Match
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 font-medium">
+                Поки що ще нікого матчити. Запроси перших учасників.
               </p>
             )}
           </div>

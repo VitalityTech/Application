@@ -12,10 +12,14 @@ const getCategoryBadgeClass = (category: string) => {
       return "bg-purple-100 text-purple-600 border-purple-200";
     case "art":
       return "bg-pink-100 text-pink-600 border-pink-200";
-    case "sports":
+    case "sport":
       return "bg-orange-100 text-orange-600 border-orange-200";
-    case "workshop":
+    case "food":
       return "bg-green-100 text-green-600 border-green-200";
+    case "business":
+      return "bg-indigo-100 text-indigo-600 border-indigo-200";
+    case "charity":
+      return "bg-red-100 text-red-600 border-red-200";
     default:
       return "bg-slate-100 text-slate-600 border-slate-200";
   }
@@ -25,9 +29,10 @@ const CATEGORIES = [
   { id: "tech", label: "Tech", color: "bg-blue-500" },
   { id: "music", label: "Music", color: "bg-purple-500" },
   { id: "art", label: "Art", color: "bg-pink-500" },
-  { id: "sports", label: "Sports", color: "bg-orange-500" },
-  { id: "workshop", label: "Workshop", color: "bg-green-500" },
-  { id: "other", label: "Other", color: "bg-slate-500" },
+  { id: "sport", label: "Sport", color: "bg-orange-500" },
+  { id: "food", label: "Food", color: "bg-green-500" },
+  { id: "business", label: "Business", color: "bg-indigo-500" },
+  { id: "charity", label: "Charity", color: "bg-red-500" },
 ];
 
 export const CreateEventPage = () => {

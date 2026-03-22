@@ -27,11 +27,81 @@ const CATEGORY_MAP: Record<string, string> = {
   нетворкінг: "bg-orange-50 text-orange-600 border-orange-100",
 };
 
+const CATEGORY_ALIASES: Record<string, string> = {
+  tech: "tech",
+  music: "music",
+  art: "art",
+  sport: "sport",
+  sports: "sport",
+  food: "food",
+  business: "business",
+  charity: "charity",
+  конференції: "tech",
+  мітапи: "music",
+  воркшопи: "art",
+  вебінари: "food",
+  нетворкінг: "sport",
+};
+
+const normalizeCategory = (category?: string) => {
+  const key = (category || "").trim().toLowerCase();
+  return CATEGORY_ALIASES[key] || "other";
+};
+
 const getCategoryStyles = (category: string) => {
+  const normalizedCategory = normalizeCategory(category);
   return (
-    CATEGORY_MAP[category.toLowerCase()] ||
+    CATEGORY_MAP[normalizedCategory] ||
     "bg-slate-50 text-slate-500 border-slate-100"
   );
+};
+
+const EVENT_MOOD_MAP: Record<string, string> = {
+  tech: "Startup Rush",
+  music: "High Energy",
+  art: "Creative Flow",
+  sport: "Action Mode",
+  food: "Warm Social",
+  business: "Deep Networking",
+  charity: "Purpose Driven",
+  конференції: "Deep Focus",
+  мітапи: "Startup Rush",
+  воркшопи: "Hands-on Lab",
+  вебінари: "Calm Learning",
+  нетворкінг: "Deep Networking",
+};
+
+const getEventMood = (category?: string) => {
+  const key = normalizeCategory(category);
+  return EVENT_MOOD_MAP[key] || "Open Format";
+};
+
+const getTrustSignal = (participantsCount: number, capacity: number | null) => {
+  if (capacity && participantsCount >= capacity) {
+    return {
+      label: "Sold out momentum",
+      tone: "text-red-600",
+    };
+  }
+
+  if (participantsCount >= 20) {
+    return {
+      label: "High demand this week",
+      tone: "text-indigo-600",
+    };
+  }
+
+  if (participantsCount >= 8) {
+    return {
+      label: "Growing fast",
+      tone: "text-violet-600",
+    };
+  }
+
+  return {
+    label: "Fresh event",
+    tone: "text-emerald-600",
+  };
 };
 
 interface Event {
@@ -48,20 +118,22 @@ interface Event {
 }
 
 const CATEGORY_OPTIONS = [
-  "Усі категорії",
-  "Конференції",
-  "Мітапи",
-  "Воркшопи",
-  "Вебінари",
-  "Нетворкінг",
-  "Інше",
+  { value: "all", label: "Усі категорії" },
+  { value: "tech", label: "tech" },
+  { value: "music", label: "music" },
+  { value: "art", label: "art" },
+  { value: "sport", label: "sport" },
+  { value: "food", label: "food" },
+  { value: "business", label: "business" },
+  { value: "charity", label: "charity" },
+  { value: "other", label: "other" },
 ];
 
 const DEMO_EVENTS: Event[] = [
   {
     id: "demo-tech-meetup",
     title: "Spring Tech Meetup",
-    category: "Мітапи",
+    category: "tech",
     description:
       "Обговорення AI-трендів, NestJS best practices та networking з розробниками.",
     startDate: "2026-03-29T14:00:00.000Z",
@@ -74,7 +146,7 @@ const DEMO_EVENTS: Event[] = [
   {
     id: "demo-cyber-night",
     title: "CyberPunk Night",
-    category: "Воркшопи",
+    category: "music",
     description:
       "Тематична подія про digital-art, музику та live-перформанси у стилі кіберпанк.",
     startDate: "2026-03-25T17:00:00.000Z",
@@ -87,7 +159,7 @@ const DEMO_EVENTS: Event[] = [
   {
     id: "demo-business-network",
     title: "Startup Networking Evening",
-    category: "Нетворкінг",
+    category: "business",
     description:
       "Швидкі знайомства для фаундерів, маркетологів і продакт-менеджерів.",
     startDate: "2026-04-02T15:30:00.000Z",
@@ -100,7 +172,7 @@ const DEMO_EVENTS: Event[] = [
   {
     id: "demo-webinar-growth",
     title: "Growth Webinar: From Idea to Launch",
-    category: "Вебінари",
+    category: "food",
     description:
       "Практичний вебінар про валідацію ідеї, MVP та перших користувачів.",
     startDate: "2026-04-05T16:00:00.000Z",
@@ -115,7 +187,7 @@ const DEMO_EVENTS: Event[] = [
 export const EventsPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("Усі категорії");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [processingEventId, setProcessingEventId] = useState<string | null>(
     null,
   );
@@ -156,8 +228,8 @@ export const EventsPage = () => {
       (event.location || "").toLowerCase().includes(query);
 
     const matchesCategory =
-      selectedCategory === "Усі категорії" ||
-      (event.category || "Інше") === selectedCategory;
+      selectedCategory === "all" ||
+      normalizeCategory(event.category) === selectedCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -209,12 +281,12 @@ export const EventsPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
-      <main className="max-w-7xl mx-auto px-4 py-8 md:py-12">
-        <div className="mb-8 md:mb-10">
+      <main className="max-w-7xl mx-auto px-4 pt-1 pb-8 md:pt-2 md:pb-10">
+        <div className="mb-4 md:mb-6">
           <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
             {user.id ? "✦ My Workspace" : "✦ Explore"}
           </div>
-          <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.12] pb-1 bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent mb-3">
+          <h1 className="text-3xl md:text-5xl font-black tracking-tight leading-[1.1] pb-1 bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent mb-2">
             {user.id ? "My Space" : "Find an Event"}
           </h1>
           <p className="text-slate-400 font-medium text-sm md:text-base max-w-md leading-relaxed">
@@ -222,7 +294,7 @@ export const EventsPage = () => {
               ? "Browse, join, and manage your events in one place"
               : "Discover top events and find inspiration nearby"}
           </p>
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
             <div className="relative">
               <BsSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -239,8 +311,8 @@ export const EventsPage = () => {
               className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 cursor-pointer"
             >
               {CATEGORY_OPTIONS.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+                <option key={category.value} value={category.value}>
+                  {category.label}
                 </option>
               ))}
             </select>
@@ -258,6 +330,11 @@ export const EventsPage = () => {
               const isProcessing = processingEventId === event.id;
               const disableJoin = Boolean(isFull && !isParticipant);
               const isGuest = !user.id;
+              const trustSignal = getTrustSignal(
+                event._count?.participants || 0,
+                event.capacity,
+              );
+              const eventMood = getEventMood(event.category);
 
               return (
                 <Link
@@ -279,10 +356,13 @@ export const EventsPage = () => {
                       </h3>
                       {/* --- ЦЕЙ БЛОК МАЛЮЄ КОЛЬОРОВИЙ БЕЙДЖ --- */}
                       <span
-                        className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shrink-0 border transition-all ${getCategoryStyles(event.category || "Інше")}`}
+                        className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shrink-0 border transition-all ${getCategoryStyles(event.category || "other")}`}
                       >
-                        {event.category || "Інше"}
+                        {normalizeCategory(event.category)}
                       </span>
+                    </div>
+                    <div className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-3">
+                      Mood: {eventMood}
                     </div>
                     <p className="text-slate-500 text-sm font-medium line-clamp-2 leading-relaxed">
                       {event.description || "No description provided."}
@@ -323,13 +403,22 @@ export const EventsPage = () => {
                       <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center">
                         <BsPeople className="text-indigo-600" />
                       </div>
-                      <span
-                        className={isFull ? "text-red-500" : "text-emerald-600"}
-                      >
-                        {event._count?.participants || 0} /{" "}
-                        {event.capacity || "∞"} participants{" "}
-                        {isFull && "(Full)"}
-                      </span>
+                      <div className="flex flex-col">
+                        <span
+                          className={
+                            isFull ? "text-red-500" : "text-emerald-600"
+                          }
+                        >
+                          {event._count?.participants || 0} /{" "}
+                          {event.capacity || "∞"} participants{" "}
+                          {isFull && "(Full)"}
+                        </span>
+                        <span
+                          className={`text-xs font-semibold ${trustSignal.tone}`}
+                        >
+                          {trustSignal.label}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -375,7 +464,7 @@ export const EventsPage = () => {
           ) : (
             <div className="col-span-full bg-white rounded-4xl sm:rounded-[40px] p-10 sm:p-20 text-center border-2 border-dashed border-slate-200">
               <p className="text-slate-400 mb-6 font-bold text-xl">
-                {search || selectedCategory !== "Усі категорії"
+                {search || selectedCategory !== "all"
                   ? "No events matched your filters."
                   : user.id
                     ? "You have no events yet. Create your first one."

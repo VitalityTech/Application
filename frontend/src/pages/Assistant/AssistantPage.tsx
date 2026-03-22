@@ -1,6 +1,34 @@
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { API_BASE_URL } from "../../api/baseUrl";
+
+const COPILOT_ACTIONS = [
+  {
+    title: "План на тиждень",
+    subtitle: "3-5 подій під твій темп",
+    prompt:
+      "Склади мені план на цей тиждень: обери 3-5 найкращих подій з моїх даних, коротко поясни чому, і розподіли за днями.",
+  },
+  {
+    title: "Події за інтересами",
+    subtitle: "Те, що підходить саме мені",
+    prompt:
+      "Проаналізуй мої події і запропонуй, на які варто зробити фокус за інтересами та категоріями.",
+  },
+  {
+    title: "Швидкий нетворкінг",
+    subtitle: "Де більше знайомств",
+    prompt:
+      "Покажи події, де найкраще підійде нетворкінг цього місяця, і дай короткий план дій перед кожною.",
+  },
+  {
+    title: "Тижневий дайджест",
+    subtitle: "Що не пропустити",
+    prompt:
+      "Зроби мені тижневий дайджест найважливіших подій у форматі короткого списку пріоритетів.",
+  },
+];
 
 const AssistantPage = () => {
   const [question, setQuestion] = useState("");
@@ -11,8 +39,8 @@ const AssistantPage = () => {
   const user = userString ? JSON.parse(userString) : null;
   const userId = user?.id;
 
-  const handleAsk = async () => {
-    if (!question.trim()) return;
+  const ask = async (prompt: string) => {
+    if (!prompt.trim()) return;
     if (!userId) {
       toast.error("Будь ласка, увійдіть в систему");
       return;
@@ -20,10 +48,11 @@ const AssistantPage = () => {
 
     setLoading(true);
     setAnswer("");
+    setQuestion(prompt);
 
     try {
-      const response = await axios.post("http://localhost:3000/ai/ask", {
-        question: question,
+      const response = await axios.post(`${API_BASE_URL}/ai/ask`, {
+        question: prompt,
         userId: userId,
       });
 
@@ -46,6 +75,14 @@ const AssistantPage = () => {
     }
   };
 
+  const handleAsk = async () => {
+    await ask(question);
+  };
+
+  const handleCopilotAction = async (prompt: string) => {
+    await ask(prompt);
+  };
+
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-4 font-sans text-slate-900">
       <div className="max-w-xl w-full bg-white rounded-4xl shadow-sm border border-slate-100 p-8 md:p-10 transition-all">
@@ -64,6 +101,25 @@ const AssistantPage = () => {
         </div>
 
         <div className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {COPILOT_ACTIONS.map((action) => (
+              <button
+                key={action.title}
+                type="button"
+                onClick={() => void handleCopilotAction(action.prompt)}
+                disabled={loading}
+                className="text-left rounded-2xl border border-slate-100 bg-slate-50 p-3.5 hover:border-indigo-200 hover:bg-indigo-50/60 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <p className="text-slate-800 font-bold text-sm">
+                  {action.title}
+                </p>
+                <p className="text-slate-400 font-medium text-xs mt-1">
+                  {action.subtitle}
+                </p>
+              </button>
+            ))}
+          </div>
+
           <textarea
             rows={3}
             value={question}
@@ -82,9 +138,18 @@ const AssistantPage = () => {
 
           {answer && (
             <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <div className="flex gap-1.5 mb-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAnswer("")}
+                  className="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  Очистити
+                </button>
               </div>
               <p className="text-slate-600 leading-relaxed text-sm md:text-base whitespace-pre-line">
                 {answer}
