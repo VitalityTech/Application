@@ -134,7 +134,7 @@ export const CreateEventPage = () => {
             ✦ {formData.category}
           </div>
 
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight bg-linear-to-br from-white via-indigo-100 to-violet-300 bg-clip-text text-transparent mb-3 whitespace-nowrap">
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight bg-linear-to-br from-slate-900 via-indigo-700 to-violet-600 bg-clip-text text-transparent mb-3 whitespace-nowrap">
             Create New Event
           </h1>
         </div>
