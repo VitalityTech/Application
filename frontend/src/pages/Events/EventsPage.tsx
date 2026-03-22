@@ -11,6 +11,29 @@ import {
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../../api/baseUrl";
 
+// --- КОНСТАНТИ КОЛЬОРІВ ТА КАТЕГОРІЙ ---
+const CATEGORY_MAP: Record<string, string> = {
+  tech: "bg-blue-50 text-blue-600 border-blue-100",
+  music: "bg-purple-50 text-purple-600 border-purple-100",
+  art: "bg-pink-50 text-pink-600 border-pink-100",
+  sport: "bg-orange-50 text-orange-600 border-orange-100",
+  food: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  business: "bg-indigo-50 text-indigo-600 border-indigo-100",
+  charity: "bg-red-50 text-red-600 border-red-100",
+  Конференції: "bg-blue-50 text-blue-600 border-blue-100",
+  Мітапи: "bg-purple-50 text-purple-600 border-purple-100",
+  Воркшопи: "bg-pink-50 text-pink-600 border-pink-100",
+  Вебінари: "bg-emerald-50 text-emerald-600 border-emerald-100",
+  Нетворкінг: "bg-orange-50 text-orange-600 border-orange-100",
+};
+
+const getCategoryStyles = (category: string) => {
+  return (
+    CATEGORY_MAP[category.toLowerCase()] ||
+    "bg-slate-50 text-slate-500 border-slate-100"
+  );
+};
+
 interface Event {
   id: string;
   title: string;
@@ -103,9 +126,8 @@ export const EventsPage = () => {
       );
 
       const responseData = await response.json();
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(responseData.message || "Request failed");
-      }
 
       setEvents((prev) =>
         prev.map((item) =>
@@ -113,9 +135,7 @@ export const EventsPage = () => {
             ? {
                 ...item,
                 participants: responseData.participants,
-                _count: {
-                  participants: responseData.participants.length,
-                },
+                _count: { participants: responseData.participants.length },
               }
             : item,
         ),
@@ -123,8 +143,7 @@ export const EventsPage = () => {
 
       toast.success(isParticipant ? "You left the event" : "Joined event");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Network error";
-      toast.error(message);
+      toast.error(error instanceof Error ? error.message : "Network error");
     } finally {
       setProcessingEventId(null);
     }
@@ -176,7 +195,7 @@ export const EventsPage = () => {
               const isFull =
                 event.capacity && event._count.participants >= event.capacity;
               const isParticipant = event.participants?.some(
-                (participant) => participant.id === user.id,
+                (p) => p.id === user.id,
               );
               const isProcessing = processingEventId === event.id;
               const disableJoin = Boolean(isFull && !isParticipant);
@@ -192,7 +211,10 @@ export const EventsPage = () => {
                       <h3 className="text-2xl font-black text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1">
                         {event.title}
                       </h3>
-                      <span className="text-xs font-black bg-slate-100 text-slate-700 px-3 py-1 rounded-full shrink-0">
+                      {/* --- ЦЕЙ БЛОК МАЛЮЄ КОЛЬОРОВИЙ БЕЙДЖ --- */}
+                      <span
+                        className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full shrink-0 border transition-all ${getCategoryStyles(event.category || "Інше")}`}
+                      >
                         {event.category || "Інше"}
                       </span>
                     </div>

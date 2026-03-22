@@ -48,6 +48,27 @@ export const AppHeader = () => {
         {token ? (
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <Link
+              to="/assistant"
+              className="group relative bg-linear-to-r from-fuchsia-600 via-purple-600 to-indigo-600 text-white px-4 py-2.5 rounded-full text-sm font-semibold tracking-wide flex items-center shadow-md shadow-indigo-200 ring-1 ring-white/40 shrink-0 transition-transform duration-200 ease-out hover:-translate-y-0.5 hover:scale-105 hover:shadow-lg hover:shadow-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-300"
+            >
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-full bg-white/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-1 -z-10 rounded-full bg-linear-to-r from-fuchsia-500 to-indigo-500 blur-md opacity-40 transition-opacity duration-300 group-hover:opacity-70"
+              />
+              <span className="relative flex items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse"
+                />
+                <span>Ask AI</span>
+              </span>
+            </Link>
+
+            <Link
               to="/create-event"
               className="bg-indigo-600 text-white p-2.5 sm:px-5 sm:py-2.5 rounded-2xl text-sm font-black flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 shrink-0"
             >

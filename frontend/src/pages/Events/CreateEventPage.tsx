@@ -1,8 +1,34 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BsArrowLeft } from "react-icons/bs";
 import toast from "react-hot-toast";
 import { API_BASE_URL } from "../../api/baseUrl";
+
+const getCategoryBadgeClass = (category: string) => {
+  switch (category.toLowerCase()) {
+    case "tech":
+      return "bg-blue-100 text-blue-600 border-blue-200";
+    case "music":
+      return "bg-purple-100 text-purple-600 border-purple-200";
+    case "art":
+      return "bg-pink-100 text-pink-600 border-pink-200";
+    case "sports":
+      return "bg-orange-100 text-orange-600 border-orange-200";
+    case "workshop":
+      return "bg-green-100 text-green-600 border-green-200";
+    default:
+      return "bg-slate-100 text-slate-600 border-slate-200";
+  }
+};
+
+const CATEGORIES = [
+  { id: "tech", label: "Tech", color: "bg-blue-500" },
+  { id: "music", label: "Music", color: "bg-purple-500" },
+  { id: "art", label: "Art", color: "bg-pink-500" },
+  { id: "sports", label: "Sports", color: "bg-orange-500" },
+  { id: "workshop", label: "Workshop", color: "bg-green-500" },
+  { id: "other", label: "Other", color: "bg-slate-500" },
+];
 
 export const CreateEventPage = () => {
   const navigate = useNavigate();
@@ -10,7 +36,7 @@ export const CreateEventPage = () => {
 
   const [formData, setFormData] = useState({
     title: "",
-    category: "Інше",
+    category: "tech",
     description: "",
     date: "",
     time: "",
@@ -23,7 +49,6 @@ export const CreateEventPage = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Перевірка на авторизацію
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (!user.id) {
       toast.error("You must be logged in to create an event");
@@ -32,15 +57,16 @@ export const CreateEventPage = () => {
       return;
     }
 
-    // Валідація дати: не в минулому
     const selectedDate = new Date(`${formData.date}T${formData.time}`);
-    if (selectedDate < new Date()) {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - 10); // Запас 10 хвилин
+
+    if (selectedDate < now) {
       toast.error("You cannot create events in the past");
       setLoading(false);
       return;
     }
 
-    // Перевірка обов'язкових полів
     if (
       !formData.title ||
       !formData.description ||
@@ -61,19 +87,17 @@ export const CreateEventPage = () => {
           ...formData,
           userId: user.id,
           capacity: formData.capacity ? Number(formData.capacity) : null,
+          tags: [formData.category],
         }),
       });
 
       if (response.ok) {
         const newEvent = await response.json();
         toast.success("Event created successfully!");
-        navigate(`/events/${newEvent.id}`); // Редірект на сторінку деталей
+        navigate(`/events/${newEvent.id}`);
       } else {
         const errorData = await response.json();
-        const errorMessage =
-          errorData.message || errorData.error || "Failed to create event";
-        toast.error(errorMessage);
-        console.error("Event creation error:", errorData);
+        toast.error(errorData.message || "Failed to create event");
       }
     } catch (error) {
       console.error("Network error:", error);
@@ -84,38 +108,46 @@ export const CreateEventPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans text-slate-900">
-      {/* Back Button */}
+    <div className="min-h-screen bg-slate-50 p-6 md:p-12 font-sans text-slate-900 relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-15%] w-150 h-150 rounded-full bg-purple-200/40 blur-[130px] -z-10 animate-pulse"></div>
+      <div className="absolute bottom-[-10%] right-[-15%] w-150 h-150 rounded-full bg-blue-200/40 blur-[130px] -z-10 animate-pulse"></div>
+
+      <div className="absolute top-[20%] right-[10%] text-6xl text-purple-100 -z-10 opacity-70">
+        ✨
+      </div>
+      <div className="absolute bottom-[20%] left-[10%] text-6xl text-blue-100 -z-10 opacity-70">
+        ⚡
+      </div>
+
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 mb-8 font-semibold transition-colors"
+        className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 mb-8 font-semibold transition-colors relative z-10"
       >
         <BsArrowLeft /> Back
       </button>
 
-      <div className="max-w-2xl mx-auto bg-white p-10 rounded-[40px] shadow-sm border border-slate-100">
+      <div className="max-w-2xl mx-auto bg-white p-10 rounded-[40px] shadow-sm border border-slate-100 relative z-10">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4">
-            ✦ New Event
+          <div
+            className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4 border transition-all duration-300 ${getCategoryBadgeClass(formData.category)}`}
+          >
+            ✦ {formData.category}
           </div>
-          <h1 className="text-2xl sm:text-4xl font-black tracking-tight bg-linear-to-br from-slate-900 via-indigo-900 to-violet-800 bg-clip-text text-transparent mb-3 whitespace-nowrap">
+
+          <h1 className="text-2xl sm:text-4xl font-black tracking-tight bg-linear-to-br from-white via-indigo-100 to-violet-300 bg-clip-text text-transparent mb-3 whitespace-nowrap">
             Create New Event
           </h1>
-          <p className="text-slate-400 font-medium text-sm max-w-xs mx-auto leading-relaxed">
-            Fill in the details below to bring your event to life
-          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Title */}
           <div>
-            <label className="block text-sm font-bold mb-2 ml-1">
-              Event Title <span className="text-red-500">*</span>
+            <label className="block text-sm font-bold mb-2 ml-1 text-slate-700">
+              Event Title *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g., Tech Conference 2025"
+              placeholder="e.g., CyberPunk Night 2077"
               className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
@@ -123,10 +155,34 @@ export const CreateEventPage = () => {
             />
           </div>
 
+          {/* Category / Tags Selector */}
+          <div>
+            <label className="block text-sm font-bold mb-4 ml-1 text-slate-700">
+              Category (Event Tag) *
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, category: cat.id })}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all font-bold text-sm ${
+                    formData.category === cat.id
+                      ? `border-indigo-600 bg-indigo-50 text-indigo-600`
+                      : `border-slate-50 bg-slate-50 text-slate-500 hover:border-slate-200`
+                  }`}
+                >
+                  <span className={`w-3 h-3 rounded-full ${cat.color}`}></span>
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Description */}
           <div>
-            <label className="block text-sm font-bold mb-2 ml-1">
-              Description <span className="text-red-500">*</span>
+            <label className="block text-sm font-bold mb-2 ml-1 text-slate-700">
+              Description *
             </label>
             <textarea
               required
@@ -138,75 +194,33 @@ export const CreateEventPage = () => {
             ></textarea>
           </div>
 
-          <div>
-            <label className="block text-sm font-bold mb-2 ml-1">
-              Category
-            </label>
-            <select
-              value={formData.category}
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all cursor-pointer"
-              onChange={(e) =>
-                setFormData({ ...formData, category: e.target.value })
-              }
-            >
-              <option value="Конференції">Конференції</option>
-              <option value="Мітапи">Мітапи</option>
-              <option value="Воркшопи">Воркшопи</option>
-              <option value="Вебінари">Вебінари</option>
-              <option value="Нетворкінг">Нетворкінг</option>
-              <option value="Інше">Інше</option>
-            </select>
-          </div>
-
-          {/* Date & Time Row */}
+          {/* Date & Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold mb-2 ml-1">
-                Date <span className="text-red-500">*</span>
+              <label className="block text-sm font-bold mb-2 ml-1 text-slate-700">
+                Date *
               </label>
               <input
                 type="date"
                 required
-                placeholder="ДД.ММ.Р"
                 value={formData.date}
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-slate-900"
-                style={{
-                  colorScheme: "light",
-                }}
-                onClick={(e) => {
-                  try {
-                    (e.target as HTMLInputElement).showPicker?.();
-                  } catch (error) {
-                    // Fallback якщо showPicker не підтримується
-                    console.log(error);
-                  }
-                }}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                 onChange={(e) =>
                   setFormData({ ...formData, date: e.target.value })
                 }
               />
             </div>
             <div>
-              <label className="block text-sm font-bold mb-2 ml-1">
-                Time <span className="text-red-500">*</span>
+              <label className="block text-sm font-bold mb-2 ml-1 text-slate-700">
+                Time *
               </label>
               <input
                 type="time"
                 required
-                placeholder="--:--"
                 value={formData.time}
-                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer text-slate-900"
-                style={{
-                  colorScheme: "light",
-                }}
-                onClick={(e) => {
-                  try {
-                    (e.target as HTMLInputElement).showPicker?.();
-                  } catch (error) {
-                    // Fallback якщо showPicker не підтримується
-                    console.log(error);
-                  }
-                }}
+                onClick={(e) => (e.target as HTMLInputElement).showPicker?.()}
+                className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
                 onChange={(e) =>
                   setFormData({ ...formData, time: e.target.value })
                 }
@@ -216,13 +230,13 @@ export const CreateEventPage = () => {
 
           {/* Location */}
           <div>
-            <label className="block text-sm font-bold mb-2 ml-1">
-              Location <span className="text-red-500">*</span>
+            <label className="block text-sm font-bold mb-2 ml-1 text-slate-700">
+              Location *
             </label>
             <input
               type="text"
               required
-              placeholder="e.g., Convention Center"
+              placeholder="e.g., Secret Bunker"
               className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
               onChange={(e) =>
                 setFormData({ ...formData, location: e.target.value })
@@ -230,79 +244,12 @@ export const CreateEventPage = () => {
             />
           </div>
 
-          {/* Capacity */}
-          <div>
-            <label className="block text-sm font-bold mb-2 ml-1">
-              Capacity (optional)
-            </label>
-            <input
-              type="number"
-              placeholder="Leave empty for unlimited"
-              className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none"
-              onChange={(e) =>
-                setFormData({ ...formData, capacity: e.target.value })
-              }
-            />
-            <p className="text-[11px] text-slate-400 mt-2 ml-1">
-              Maximum number of participants. Leave empty for unlimited
-              capacity.
-            </p>
-          </div>
-
-          {/* Visibility */}
-          <div className="space-y-3">
-            <label className="block text-sm font-bold ml-1">Visibility</label>
-            <div className="flex flex-col gap-3">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="visibility"
-                  value="public"
-                  checked={formData.visibility === "public"}
-                  className="w-5 h-5 accent-indigo-600"
-                  onChange={(e) =>
-                    setFormData({ ...formData, visibility: e.target.value })
-                  }
-                />
-                <div>
-                  <p className="text-sm font-bold group-hover:text-indigo-600 transition-colors">
-                    Public - Anyone can see and join this event
-                  </p>
-                </div>
-              </label>
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <input
-                  type="radio"
-                  name="visibility"
-                  value="private"
-                  checked={formData.visibility === "private"}
-                  className="w-5 h-5 accent-indigo-600"
-                  onChange={(e) =>
-                    setFormData({ ...formData, visibility: e.target.value })
-                  }
-                />
-                <div>
-                  <p className="text-sm font-bold group-hover:text-indigo-600 transition-colors">
-                    Private - Only invited people can see this event
-                  </p>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex flex-col-reverse sm:grid sm:grid-cols-2 gap-3 pt-6">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="w-full py-4 px-6 border-2 border-slate-200 bg-white text-slate-600 rounded-2xl font-bold text-base hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.97]"
-            >
-              Cancel
-            </button>
+          {/* Submit */}
+          <div className="pt-6">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-linear-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 px-6 bg-linear-to-r from-indigo-600 to-violet-600 text-white rounded-2xl font-bold text-base hover:from-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.97] disabled:opacity-50"
             >
               {loading ? "Creating..." : "Create Event"}
             </button>

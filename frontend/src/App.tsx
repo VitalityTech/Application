@@ -16,6 +16,7 @@ import { MyEventsPage } from "./pages/Events/MyEventsPage";
 import { ProfilePage } from "./pages/Profile/ProfilePage";
 import { AppHeader } from "./components/layout/AppHeader";
 import { AppFooter } from "./components/layout/AppFooter";
+import AssistantPage from "./pages/Assistant/AssistantPage";
 
 const HomeRoute = () => <Navigate to="/register" replace />;
 
@@ -47,60 +48,65 @@ function App() {
       <Toaster position="top-center" reverseOrder={false} />
 
       <Router>
-        <AppChrome />
-        <Routes>
-          <Route path="/" element={<HomeRoute />} />
+        <div className="min-h-screen flex flex-col">
+          <AppChrome />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<HomeRoute />} />
 
-          <Route path="/events" element={<EventsPage />} />
-          <Route path="/events/:id" element={<EventDetailsPage />} />
+              <Route path="/events" element={<EventsPage />} />
+              <Route path="/events/:id" element={<EventDetailsPage />} />
+              <Route path="/assistant" element={<AssistantPage />} />
 
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <RegisterPage />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/login"
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            }
-          />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <RegisterPage />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <LoginPage />
+                  </PublicRoute>
+                }
+              />
 
-          <Route
-            path="/create-event"
-            element={
-              <PrivateRoute>
-                <CreateEventPage />
-              </PrivateRoute>
-            }
-          />
+              <Route
+                path="/create-event"
+                element={
+                  <PrivateRoute>
+                    <CreateEventPage />
+                  </PrivateRoute>
+                }
+              />
 
-          <Route
-            path="/my-events"
-            element={
-              <PrivateRoute>
-                <MyEventsPage />
-              </PrivateRoute>
-            }
-          />
+              <Route
+                path="/my-events"
+                element={
+                  <PrivateRoute>
+                    <MyEventsPage />
+                  </PrivateRoute>
+                }
+              />
 
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <ProfilePage />
-              </PrivateRoute>
-            }
-          />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <ProfilePage />
+                  </PrivateRoute>
+                }
+              />
 
-          <Route path="*" element={<Navigate to="/events" replace />} />
-        </Routes>
-        <AppFooter />
+              <Route path="*" element={<Navigate to="/events" replace />} />
+            </Routes>
+          </main>
+          <AppFooter />
+        </div>
       </Router>
     </>
   );
